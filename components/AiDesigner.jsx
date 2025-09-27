@@ -9,10 +9,9 @@ const AiDesigner = () => {
     const router = useRouter();
 
     return (
-        <div className='mx-6 my-20'> 
+        <div className='px-6 lg:px-12 my-20'>
             {/* 3. Main container is now a flexbox */}
-            <div className='max-w-6xl mx-auto bg-blue-100 rounded-3xl flex flex-col md:flex-row items-center overflow-hidden'>
-                {/* 4. Container for all the text content */}
+            <div className='bg-slate-100 rounded-3xl flex flex-col md:flex-row items-center overflow-hidden'>                {/* 4. Container for all the text content */}
                 <div className='flex-1 p-8 sm:p-12 text-center md:text-left items-center md:items-start flex flex-col'>
                     <h2 className='text-3xl sm:text-4xl font-semibold text-slate-800'>Personalized AI-Generated Designs</h2>
                     <p className='text-slate-600 mt-4 max-w-2xl'>

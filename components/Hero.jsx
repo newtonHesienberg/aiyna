@@ -8,10 +8,10 @@ import CategoriesMarquee from './CategoriesMarquee'
 const Hero = () => {
 
     return (
-        <div className='mx-6'>
-            <div className='flex max-xl:flex-col gap-8 max-w-7xl mx-auto my-10'>
+        <div>
+            <div className='flex max-xl:flex-col gap-8 w-full my-10 px-6 lg:px-12'>
                 {/* Main Hero Banner */}
-                <div className='relative flex-1 flex flex-col bg-slate-100 rounded-3xl xl:min-h-100 group overflow-hidden'>
+                 <div className='relative flex-1 flex flex-col bg-slate-100 rounded-3xl group overflow-hidden'>
                     <div className='p-5 sm:p-16'>
                         <div className='inline-flex items-center gap-3 bg-slate-200 text-slate-800 pr-4 p-1 rounded-full text-xs sm:text-sm'>
                             <span className='bg-slate-800 px-3 py-1 max-sm:ml-1 rounded-full text-white text-xs'>NEW</span> Get Your Personalized AI Style Report! <ChevronRightIcon className='group-hover:ml-2 transition-all' size={16} />
@@ -35,7 +35,7 @@ const Hero = () => {
                 </div>
 
                 {/* Side Banners */}
-                <div className='flex flex-col md:flex-row xl:flex-col gap-5 w-full xl:max-w-sm text-sm text-slate-700'>
+                <div className='flex flex-col gap-5 w-full xl:max-w-xs text-sm text-slate-700'>
                     <div className='flex-1 flex items-center justify-between w-full bg-purple-100 rounded-3xl p-6 px-8 group'>
                         <div>
                             <p className='text-3xl font-medium bg-gradient-to-r from-slate-800 to-[#B38CFF] bg-clip-text text-transparent max-w-40'>Curated For You</p>

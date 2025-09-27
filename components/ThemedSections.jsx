@@ -20,8 +20,7 @@ const ThemedSections = () => {
     .slice(0, 4);
 
   return (
-    <div className="mx-6 my-20">
-      <div className="max-w-7xl mx-auto">
+    <div className="px-6 lg:px-12 my-20">
         {/* Tabs */}
         <div className="flex justify-center gap-4 sm:gap-8 border-b border-slate-200 mb-8">
           {themedSectionsData.map((section) => (
@@ -87,7 +86,6 @@ const ThemedSections = () => {
           </div>
         </div>
       </div>
-    </div>
   );
 };
 
