@@ -1,39 +1,41 @@
 'use strict';
 
 const { Sequelize } = require('sequelize');
-const config = require('./postgres.js');
-let postgresDb;
+require('dotenv').config();
+
+let sequelize;
 
 const connectToPostgresDb = async () => {
-  postgresDb = new Sequelize(
-    config.database,
-    config.user,
-    config.password,
-    {
-      host: config.host,
-      dialect: config.dialect,
-      port: config.port,
-      dialectOptions: {
-        ssl: {
-          require: true,
-          rejectUnauthorized: false
-        },
-      },
+    if (sequelize) {
+        return sequelize;
     }
-  );
-  try {
-    await postgresDb.authenticate();
-    console.log('Connection to postgres established successfully!');
-  } catch (err) {
-    console.error(`Unable to connect to postgres database: ${err}`);
-  }
+
+    sequelize = new Sequelize(
+        process.env.DB_NAME,
+        process.env.DB_USERNAME,
+        process.env.DB_PASSWORD,
+        {
+            host: process.env.DB_HOST,
+            dialect: 'postgres',
+            port: process.env.DB_PORT,
+            dialectModule: require('pg'), // Explicitly require the 'pg' module
+            dialectOptions: {
+                ssl: {
+                    require: true,
+                    rejectUnauthorized: false
+                },
+            },
+        }
+    );
+
+    try {
+        await sequelize.authenticate();
+        console.log('Connection to postgres established successfully!');
+    } catch (err) {
+        console.error(`Unable to connect to postgres database: ${err}`);
+    }
+
+    return sequelize;
 };
 
-const getPostgresDb = async () => {
-  if (!postgresDb) {
-    await connectToPostgresDb();
-  }
-  return postgresDb;
-};
-
-module.exports =  { getPostgresDb };
+module.exports = { connectToPostgresDb };
