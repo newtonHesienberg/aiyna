@@ -1,20 +1,36 @@
 'use client'
-import { StarIcon } from 'lucide-react'
+import { Heart, StarIcon } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { toggleWishlist } from '@/lib/features/wishlist/wishlistSlice'
 
 const ProductCard = ({ product }) => {
+    const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '$';
+    const dispatch = useDispatch();
+    const { items: wishlistItems } = useSelector(state => state.wishlist);
+    const isWishlisted = wishlistItems.includes(product.id);
 
-    const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '$'
+    const handleWishlistToggle = (e) => {
+        e.preventDefault(); // Prevent navigating to product page
+        e.stopPropagation(); // Stop event bubbling
+        dispatch(toggleWishlist(product.id));
+    };
 
-    // calculate the average rating of the product
     const rating = Math.round(product.rating.reduce((acc, curr) => acc + curr.rating, 0) / product.rating.length);
 
     return (
-        <Link href={`/product/${product.id}`} className=' group max-xl:mx-auto'>
-            <div className='bg-[#F5F5F5] h-40  sm:w-60 sm:h-68 rounded-lg flex items-center justify-center'>
-                <Image width={500} height={500} className='max-h-30 sm:max-h-40 w-auto group-hover:scale-115 transition duration-300' src={product.images[0]} alt="" />
+        <Link href={`/product/${product.id}`} className='group max-xl:mx-auto'>
+            <div className='relative bg-[#F5F5F5] h-52 sm:h-80 rounded-lg flex items-center justify-center'>
+                <Image width={500} height={500} className='max-h-40 sm:max-h-60 w-auto group-hover:scale-105 transition duration-300' src={product.images[0]} alt="" />
+                {/* Wishlist Button */}
+                <button
+                    onClick={handleWishlistToggle}
+                    className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md hover:scale-110 transition-transform"
+                >
+                    <Heart size={20} className={`transition-colors ${isWishlisted ? 'text-red-500 fill-red-500' : 'text-slate-500'}`} />
+                </button>
             </div>
             <div className='flex justify-between gap-3 text-sm text-slate-800 pt-2 max-w-60'>
                 <div>
@@ -31,4 +47,4 @@ const ProductCard = ({ product }) => {
     )
 }
 
-export default ProductCard
+export default ProductCard;

@@ -2,7 +2,7 @@
 import Counter from "@/components/Counter";
 import OrderSummary from "@/components/OrderSummary";
 import PageTitle from "@/components/PageTitle";
-import { deleteItemFromCart } from "@/lib/features/cart/cartSlice";
+import { addToCart, deleteItemFromCart, removeFromCart } from "@/lib/features/cart/cartSlice"; // Import new actions
 import { Trash2Icon } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -20,38 +20,45 @@ export default function Cart() {
     const [cartArray, setCartArray] = useState([]);
     const [totalPrice, setTotalPrice] = useState(0);
 
-    const createCartArray = () => {
-        setTotalPrice(0);
-        const cartArray = [];
-        for (const [key, value] of Object.entries(cartItems)) {
-            const product = products.find(product => product.id === key);
-            if (product) {
-                cartArray.push({
-                    ...product,
-                    quantity: value,
-                });
-                setTotalPrice(prev => prev + product.price * value);
-            }
-        }
-        setCartArray(cartArray);
-    }
-
-    const handleDeleteItemFromCart = (productId) => {
-        dispatch(deleteItemFromCart({ productId }))
-    }
-
     useEffect(() => {
         if (products.length > 0) {
-            createCartArray();
+            let tempCartArray = [];
+            let tempTotalPrice = 0;
+
+            // New logic to build the cart array from the updated state structure
+            for (const itemId in cartItems) {
+                const item = cartItems[itemId];
+                const product = products.find(p => p.id === item.productId);
+                if (product) {
+                    tempCartArray.push({
+                        ...product,           // Base product info (name, images, etc.)
+                        ...item,              // Variation info (color, size, quantity)
+                        itemId: itemId       // The unique ID for this variation
+                    });
+                    tempTotalPrice += product.price * item.quantity;
+                }
+            }
+            setCartArray(tempCartArray);
+            setTotalPrice(tempTotalPrice);
         }
     }, [cartItems, products]);
 
+    // Update handlers to use the unique itemId
+    const handleDeleteItemFromCart = (itemId) => {
+        dispatch(deleteItemFromCart({ itemId }));
+    }
+    const handleAddToCart = (item) => {
+        dispatch(addToCart({ productId: item.productId, color: item.color, size: item.size }));
+    }
+    const handleRemoveFromCart = (itemId) => {
+        dispatch(removeFromCart({ itemId }));
+    }
+
+
     return cartArray.length > 0 ? (
         <div className="min-h-screen mx-6 text-slate-800">
-
             <div className="max-w-7xl mx-auto ">
-                {/* Title */}
-                <PageTitle heading="My Cart" text="items in your cart" linkText="Add more" />
+                <PageTitle heading="My Cart" text={`${cartArray.length} items in your cart`} linkText="Continue Shopping" path="/shop" />
 
                 <div className="flex items-start justify-between gap-5 max-lg:flex-col">
 
@@ -74,16 +81,27 @@ export default function Cart() {
                                             </div>
                                             <div>
                                                 <p className="max-sm:text-sm">{item.name}</p>
-                                                <p className="text-xs text-slate-500">{item.category}</p>
+                                                {/* Display Color and Size */}
+                                                <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                                                    <span>Color:</span>
+                                                    <div className="size-4 rounded-full border border-slate-300" style={{ backgroundColor: item.color }}></div>
+                                                    <span>|</span>
+                                                    <span>Size: {item.size}</span>
+                                                </div>
                                                 <p>{currency}{item.price}</p>
                                             </div>
                                         </td>
                                         <td className="text-center">
-                                            <Counter productId={item.id} />
+                                            {/* Counter needs updated logic to handle increments/decrements */}
+                                            <div className="inline-flex items-center gap-1 sm:gap-3 px-3 py-1 rounded border border-slate-200 max-sm:text-sm text-slate-600">
+                                                <button onClick={() => handleRemoveFromCart(item.itemId)} className="p-1 select-none">-</button>
+                                                <p className="p-1">{item.quantity}</p>
+                                                <button onClick={() => handleAddToCart(item)} className="p-1 select-none">+</button>
+                                            </div>
                                         </td>
                                         <td className="text-center">{currency}{(item.price * item.quantity).toLocaleString()}</td>
                                         <td className="text-center max-md:hidden">
-                                            <button onClick={() => handleDeleteItemFromCart(item.id)} className=" text-red-500 hover:bg-red-50 p-2.5 rounded-full active:scale-95 transition-all">
+                                            <button onClick={() => handleDeleteItemFromCart(item.itemId)} className=" text-red-500 hover:bg-red-50 p-2.5 rounded-full active:scale-95 transition-all">
                                                 <Trash2Icon size={18} />
                                             </button>
                                         </td>

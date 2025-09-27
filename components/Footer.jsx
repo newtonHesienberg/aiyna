@@ -1,4 +1,6 @@
 import Link from "next/link";
+import Image from "next/image"; // Import Image component
+import { assets } from "@/assets/assets"; // Import assets
 
 const Footer = () => {
 
@@ -14,14 +16,14 @@ const Footer = () => {
         {
             title: "PRODUCTS",
             links: [
-                { text: "Earphones", path: '/', icon: null },
-                { text: "Headphones", path: '/', icon: null },
-                { text: "Smartphones", path: '/', icon: null },
-                { text: "Laptops", path: '/', icon: null },
+                { text: "Dresses", path: '/shop', icon: null },
+                { text: "Tops", path: '/shop', icon: null },
+                { text: "Jeans", path: '/shop', icon: null },
+                { text: "Jackets", path: '/shop', icon: null },
             ]
         },
         {
-            title: "WEBSITE?",
+            title: "WEBSITE",
             links: [
                 { text: "Home", path: '/', icon: null },
                 { text: "Privacy Policy", path: '/', icon: null },
@@ -33,8 +35,8 @@ const Footer = () => {
             title: "CONTACT",
             links: [
                 { text: "+1-212-456-7890", path: '/', icon: MailIcon },
-                { text: "contact@example.com", path: '/', icon: PhoneIcon },
-                { text: "794 Francisco, 94102", path: '/', icon: MapPinIcon }
+                { text: "contact@aina.com", path: '/', icon: PhoneIcon },
+                { text: "794 Style St, Fashion City", path: '/', icon: MapPinIcon }
             ]
         }
     ];
@@ -51,10 +53,16 @@ const Footer = () => {
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col md:flex-row items-start justify-between gap-10 py-10 border-b border-slate-500/30 text-slate-500">
                     <div>
-                        <Link href="/" className="text-4xl font-semibold text-slate-700">
-                            <span className="text-green-600">go</span>cart<span className="text-green-600 text-5xl leading-0">.</span>
+                        <Link href="/">
+                             <Image 
+                                src={assets.aina_logo} 
+                                alt="Aina Logo"
+                                width={120} // Adjust width as needed
+                                height={48} // Adjust height as needed
+                                className="h-auto"
+                            />
                         </Link>
-                        <p className="max-w-[410px] mt-6 text-sm">Welcome to gocart, your ultimate destination for the latest and smartest gadgets. From smartphones and smartwatches to essential accessories, we bring you the best in innovation — all in one place.</p>
+                        <p className="max-w-[410px] mt-6 text-sm">Welcome to Aina, your ultimate destination for AI-powered fashion. Discover clothing that truly fits you from thousands of curated collections, all tailored to your unique style.</p>
                         <div className="flex items-center gap-3 mt-5">
                             {socialIcons.map((item, i) => (
                                 <Link href={item.link} key={i} className="flex items-center justify-center w-10 h-10 bg-slate-100 hover:scale-105 hover:border border-slate-300 transition rounded-full">
@@ -80,7 +88,7 @@ const Footer = () => {
                     </div>
                 </div>
                 <p className="py-4 text-sm text-slate-500">
-                    Copyright 2025 © gocart All Right Reserved.
+                    Copyright 2025 © Aina. All Right Reserved.
                 </p>
             </div>
         </footer>

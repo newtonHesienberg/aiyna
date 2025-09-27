@@ -4,6 +4,7 @@ import ProductDetails from "@/components/ProductDetails";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import FrequentlyBoughtTogether from "@/components/FrequentlyBoughtTogether"; // 1. Import the new component
 
 export default function Product() {
 
@@ -27,8 +28,8 @@ export default function Product() {
         <div className="mx-6">
             <div className="max-w-7xl mx-auto">
 
-                {/* Breadcrums */}
-                <div className="  text-gray-600 text-sm mt-8 mb-5">
+                {/* Breadcrumbs */}
+                <div className="text-gray-600 text-sm mt-8 mb-5">
                     Home / Products / {product?.category}
                 </div>
 
@@ -37,6 +38,9 @@ export default function Product() {
 
                 {/* Description & Reviews */}
                 {product && (<ProductDescription product={product} />)}
+
+                {/* 2. Add the "Frequently Bought Together" component here */}
+                {product && (<FrequentlyBoughtTogether currentProduct={product} />)}
             </div>
         </div>
     );
