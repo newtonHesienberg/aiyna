@@ -7,31 +7,74 @@ import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
     GoogleAuthProvider,
-    signInWithPopup
+    signInWithPopup,
+    updateProfile
 } from 'firebase/auth';
 import toast from 'react-hot-toast';
+//import { createUser } from '../../../lib/api'; // Import the new API function
 
 export default function LoginPage() {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [isSigningUp, setIsSigningUp] = useState(false); // Toggle between Login and Sign Up
+    const [isSigningUp, setIsSigningUp] = useState(false);
+    const [formData, setFormData] = useState({
+        firstName: '',
+        lastName: '',
+        mobile: '',
+        email: '',
+        password: '',
+    });
     const router = useRouter();
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const actionPromise = isSigningUp
-            ? createUserWithEmailAndPassword(auth, email, password)
-            : signInWithEmailAndPassword(auth, email, password);
+        if (isSigningUp) {
+            // Handle Sign Up
+            const signupPromise = createUserWithEmailAndPassword(auth, formData.email, formData.password)
+                .then(async (userCredential) => {
+                    const user = userCredential.user;
+                    const fullName = `${formData.firstName} ${formData.lastName}`.trim();
 
-        toast.promise(actionPromise, {
-            loading: isSigningUp ? 'Creating account...' : 'Logging in...',
-            success: () => {
-                router.push('/');
-                return isSigningUp ? 'Account created successfully!' : 'Logged in successfully!';
-            },
-            error: (error) => error.message,
-        });
+                    // Update Firebase profile
+                    await updateProfile(user, { displayName: fullName });
+
+                    // Save additional user details to your database via API
+                    // await createUser({
+                    //     id: user.uid,
+                    //     firstName: formData.firstName,
+                    //     lastName: formData.lastName,
+                    //     email: user.email,
+                    //     mobile: formData.mobile,
+                    // });
+
+                    return user;
+                });
+
+            toast.promise(signupPromise, {
+                loading: 'Creating account...',
+                success: () => {
+                    router.push('/');
+                    return 'Account created successfully!';
+                },
+                error: (error) => error.message,
+            });
+
+        } else {
+            // Handle Login
+            const loginPromise = signInWithEmailAndPassword(auth, formData.email, formData.password);
+            toast.promise(loginPromise, {
+                loading: 'Logging in...',
+                success: () => {
+                    router.push('/');
+                    return 'Logged in successfully!';
+                },
+                error: (error) => error.message,
+            });
+        }
     };
 
     const handleGoogleSignIn = async () => {
@@ -51,36 +94,32 @@ export default function LoginPage() {
                 <h2 className="text-2xl font-bold text-center text-slate-800 mb-6">
                     {isSigningUp ? 'Create an Account' : 'Welcome Back'}
                 </h2>
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    {isSigningUp && (
+                        <>
+                            <div className="flex gap-4">
+                                <div>
+                                    <label htmlFor="firstName" className="block text-sm font-medium text-slate-700">First Name</label>
+                                    <input id="firstName" name="firstName" type="text" required onChange={handleChange} value={formData.firstName} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                                </div>
+                                <div>
+                                    <label htmlFor="lastName" className="block text-sm font-medium text-slate-700">Last Name</label>
+                                    <input id="lastName" name="lastName" type="text" required onChange={handleChange} value={formData.lastName} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                                </div>
+                            </div>
+                            <div>
+                                <label htmlFor="mobile" className="block text-sm font-medium text-slate-700">Mobile Number</label>
+                                <input id="mobile" name="mobile" type="tel" required onChange={handleChange} value={formData.mobile} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
+                            </div>
+                        </>
+                    )}
                     <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-slate-700">
-                            Email address
-                        </label>
-                        <input
-                            id="email"
-                            name="email"
-                            type="email"
-                            autoComplete="email"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        />
+                        <label htmlFor="email" className="block text-sm font-medium text-slate-700">Email address</label>
+                        <input id="email" name="email" type="email" autoComplete="email" required onChange={handleChange} value={formData.email} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
                     </div>
                     <div>
-                        <label htmlFor="password" T className="block text-sm font-medium text-slate-700">
-                            Password
-                        </label>
-                        <input
-                            id="password"
-                            name="password"
-                            type="password"
-                            autoComplete="current-password"
-                            required
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                        />
+                        <label htmlFor="password" className="block text-sm font-medium text-slate-700">Password</label>
+                        <input id="password" name="password" type="password" autoComplete="current-password" required onChange={handleChange} value={formData.password} className="mt-1 block w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" />
                     </div>
                     <button
                         type="submit"
@@ -91,12 +130,8 @@ export default function LoginPage() {
                 </form>
                 <div className="mt-6">
                     <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-gray-300" />
-                        </div>
-                        <div className="relative flex justify-center text-sm">
-                            <span className="px-2 bg-white text-gray-500">Or continue with</span>
-                        </div>
+                        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-300" /></div>
+                        <div className="relative flex justify-center text-sm"><span className="px-2 bg-white text-gray-500">Or continue with</span></div>
                     </div>
                     <div className="mt-6">
                         <button
@@ -117,4 +152,3 @@ export default function LoginPage() {
         </div>
     );
 }
-

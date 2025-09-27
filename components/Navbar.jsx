@@ -1,5 +1,5 @@
 "use client";
-import { ChevronDown, Search, Heart, ShoppingCart, LogOut } from "lucide-react";
+import { ChevronDown, Search, Heart, ShoppingCart, LogOut, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -17,6 +17,7 @@ const Navbar = () => {
     const { cartItems } = useSelector((state) => state.cart);
     const { items: wishlistItems } = useSelector((state) => state.wishlist);
     const { currentUser } = useAuth();
+    const [isProfileMenuOpen, setProfileMenuOpen] = useState(false);
 
     const cartCount = Object.values(cartItems).reduce(
         (acc, item) => acc + item.quantity,
@@ -38,6 +39,13 @@ const Navbar = () => {
             toast.error('Failed to log out.');
         }
     };
+
+    const profileMenuItems = [
+        { name: 'My Account', path: '/profile' },
+        { name: 'My Orders', path: '/orders' },
+        { name: 'Return/Exchange', path: '#' },
+        { name: 'Support', path: '#' },
+    ]
 
     return (
         <nav className="relative bg-white">
@@ -121,11 +129,27 @@ const Navbar = () => {
                         </Link>
 
                         {currentUser ? (
-                            <div className="flex items-center gap-4">
-                                <p className="text-sm">Hi, {currentUser.displayName || currentUser.email.split('@')[0]}</p>
-                                <button onClick={handleLogout} className="p-2 text-slate-600 hover:text-indigo-600 transition-colors">
-                                    <LogOut size={18} />
-                                </button>
+                            <div
+                                className="relative flex items-center gap-4"
+                                onMouseEnter={() => setProfileMenuOpen(true)}
+                                onMouseLeave={() => setProfileMenuOpen(false)}
+                            >
+                                <Link href="/profile" className="p-2 text-slate-600 hover:text-indigo-600 transition-colors">
+                                    <User size={18} />
+                                </Link>
+                                {isProfileMenuOpen && (
+                                    <div className="absolute top-full right-0 mt-0 w-48 bg-white shadow-lg rounded-md py-2 z-50 border border-slate-100">
+                                        {profileMenuItems.map(item => (
+                                            <Link key={item.name} href={item.path} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">
+                                                {item.name}
+                                            </Link>
+                                        ))}
+                                        <div className="border-t border-slate-200 my-2"></div>
+                                        <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                            Logout
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <button onClick={() => router.push('/login')} className="px-8 py-2 bg-indigo-500 hover:bg-indigo-600 transition text-white rounded-full">
@@ -137,9 +161,14 @@ const Navbar = () => {
 
                     <div className="sm:hidden">
                         {currentUser ? (
-                            <button onClick={handleLogout} className="p-2 text-slate-600 hover:text-indigo-600 transition-colors">
-                                <LogOut size={20} />
-                            </button>
+                            <div className="flex items-center">
+                                <Link href="/profile" className="p-2 text-slate-600 hover:text-indigo-600 transition-colors">
+                                    <User size={20} />
+                                </Link>
+                                <button onClick={handleLogout} className="p-2 text-slate-600 hover:text-indigo-600 transition-colors">
+                                    <LogOut size={20} />
+                                </button>
+                            </div>
                         ) : (
                             <button onClick={() => router.push('/login')} className="px-7 py-1.5 bg-indigo-500 hover:bg-indigo-600 text-sm transition text-white rounded-full">
                                 Login
