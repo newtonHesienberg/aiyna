@@ -1,6 +1,6 @@
-# Contributing to AIna
+# Contributing to aiyna
 
-Thank you for considering contributing to **AIna**!
+Thank you for considering contributing to **aiyna**!
 We welcome contributions from everyone, whether it's fixing a bug, adding a new feature, or optimizing the codebase.
 
 ---

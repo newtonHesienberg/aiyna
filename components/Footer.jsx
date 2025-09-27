@@ -35,7 +35,7 @@ const Footer = () => {
             title: "CONTACT",
             links: [
                 { text: "+1-212-456-7890", path: '/', icon: MailIcon },
-                { text: "contact@aina.com", path: '/', icon: PhoneIcon },
+                { text: "contact@aiyna.com", path: '/', icon: PhoneIcon },
                 { text: "794 Style St, Fashion City", path: '/', icon: MapPinIcon }
             ]
         }
@@ -55,14 +55,14 @@ const Footer = () => {
                     <div>
                         <Link href="/">
                              <Image 
-                                src={assets.aina_logo} 
-                                alt="Aina Logo"
+                                src={assets.aiyna_logo} 
+                                alt="aiyna Logo"
                                 width={120} // Adjust width as needed
                                 height={48} // Adjust height as needed
                                 className="h-auto"
                             />
                         </Link>
-                        <p className="max-w-[410px] mt-6 text-sm">Welcome to Aina, your ultimate destination for AI-powered fashion. Discover clothing that truly fits you from thousands of curated collections, all tailored to your unique style.</p>
+                        <p className="max-w-[410px] mt-6 text-sm">Welcome to aiyna, your ultimate destination for AI-powered fashion. Discover clothing that truly fits you from thousands of curated collections, all tailored to your unique style.</p>
                         <div className="flex items-center gap-3 mt-5">
                             {socialIcons.map((item, i) => (
                                 <Link href={item.link} key={i} className="flex items-center justify-center w-10 h-10 bg-slate-100 hover:scale-105 hover:border border-slate-300 transition rounded-full">
@@ -88,7 +88,7 @@ const Footer = () => {
                     </div>
                 </div>
                 <p className="py-4 text-sm text-slate-500">
-                    Copyright 2025 © Aina. All Right Reserved.
+                    Copyright 2025 © aiyna. All Right Reserved.
                 </p>
             </div>
         </footer>

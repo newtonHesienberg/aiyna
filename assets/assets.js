@@ -28,7 +28,7 @@ import { ClockFadingIcon, HeadsetIcon, SendIcon } from "lucide-react";
 import profile_pic1 from "./profile_pic1.jpg";
 import profile_pic2 from "./profile_pic2.jpg";
 import profile_pic3 from "./profile_pic3.jpg";
-import aina_logo from "./aina_logo.png";
+import aiyna_logo from "./aiyna_logo.png";
 import mens_Tshirt_1 from "./mens_Tshirt_1.png";
 import mens_Hoody_1 from "./mens_Hoody_1.png";
 import womens_crop_top_1 from "./womens_crop_top_1.png";
@@ -43,7 +43,7 @@ import anime_tshirt_1 from "./anime_tshirt_1.jpg";
 import car_poster from "./car_poster.jpg";
 import office_poster from "./office_poster.jpg";
 export const assets = {
-  aina_logo,
+  aiyna_logo,
   upload_area,
   hero_model_img,
   hero_model_2,
@@ -193,22 +193,22 @@ export const dummyRatingsData = [
 export const dummyStoreData = {
   id: "store_1",
   userId: "user_1",
-  name: "Aina. Studios",
+  name: "aiyna. Studios",
   description:
-    "Welcome to Aina Studios, where fashion meets technology. We use cutting-edge AI to help you discover clothing that perfectly matches your style, fit, and preferences. Shop smart, look incredible.",
-  username: "ainastudios",
+    "Welcome to aiyna Studios, where fashion meets technology. We use cutting-edge AI to help you discover clothing that perfectly matches your style, fit, and preferences. Shop smart, look incredible.",
+  username: "aiynastudios",
   address: "123 Fashion Ave, Tech City, 54321",
   status: "approved",
   isActive: true,
   logo: happy_store,
-  email: "contact@ainastudios.com",
+  email: "contact@aiynastudios.com",
   contact: "+1 987 654 3210",
   createdAt: "2025-09-04T09:04:16.189Z",
   updatedAt: "2025-09-04T09:04:44.273Z",
   user: {
     id: "user_31dOriXqC4TATvc0brIhlYbwwc5",
     name: "Style Maven",
-    email: "maven@ainastudios.com",
+    email: "maven@aiynastudios.com",
     image: gs_logo,
   },
 };

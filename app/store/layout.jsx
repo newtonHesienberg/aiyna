@@ -1,8 +1,8 @@
 import StoreLayout from "@/components/store/StoreLayout";
 
 export const metadata = {
-    title: "AIna. - Store Dashboard",
-    description: "AIna. - Store Dashboard",
+    title: "aiyna. - Store Dashboard",
+    description: "aiyna. - Store Dashboard",
 };
 
 export default function RootAdminLayout({ children }) {

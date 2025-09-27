@@ -1,13 +1,13 @@
 <div align="center">
-  <h1><img src="https://AInashop.in/favicon.ico" width="20" height="20" alt="AIna Favicon">
-   AIna</h1>
+  <h1><img src="https://aiynashop.in/favicon.ico" width="20" height="20" alt="aiyna Favicon">
+   aiyna</h1>
   <p>
     An open-source multi-vendor e-commerce platform built with Next.js and Tailwind CSS.
   </p>
   <p>
-    <a href="https://github.com/GreatStackDev/AIna/blob/main/LICENSE.md"><img src="https://img.shields.io/github/license/GreatStackDev/AIna?style=for-the-badge" alt="License"></a>
-    <a href="https://github.com/GreatStackDev/AIna/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge" alt="PRs Welcome"></a>
-    <a href="https://github.com/GreatStackDev/AIna/issues"><img src="https://img.shields.io/github/issues/GreatStackDev/AIna?style=for-the-badge" alt="GitHub issues"></a>
+    <a href="https://github.com/GreatStackDev/aiyna/blob/main/LICENSE.md"><img src="https://img.shields.io/github/license/GreatStackDev/aiyna?style=for-the-badge" alt="License"></a>
+    <a href="https://github.com/GreatStackDev/aiyna/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge" alt="PRs Welcome"></a>
+    <a href="https://github.com/GreatStackDev/aiyna/issues"><img src="https://img.shields.io/github/issues/GreatStackDev/aiyna?style=for-the-badge" alt="GitHub issues"></a>
   </p>
 </div>
 

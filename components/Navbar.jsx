@@ -30,8 +30,8 @@ const Navbar = () => {
         <div className="flex items-center justify-between max-w-7xl mx-auto py-4 transition-all">
           <Link href="/">
             <Image
-              src={assets.aina_logo}
-              alt="Aina Logo"
+              src={assets.aiyna_logo}
+              alt="aiyna Logo"
               width={100}
               height={40}
               className="h-auto"
