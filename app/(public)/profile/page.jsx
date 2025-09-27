@@ -3,10 +3,14 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/app/context/AuthContext";
 import toast from "react-hot-toast";
 import { User, ShoppingBag, MapPin, CreditCard, MessageSquare, LogOut, Trash2, Edit } from "lucide-react";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import { useRouter } from "next/navigation";
 
 // Main component for the entire page
 export default function ProfilePage() {
     const { currentUser } = useAuth();
+    const router = useRouter();
     const [activeTab, setActiveTab] = useState("Profile");
     const [formData, setFormData] = useState({
         firstName: "",
@@ -16,6 +20,17 @@ export default function ProfilePage() {
         dob: "",
         gender: "",
     });
+
+    const handleLogout = async () => {
+        try {
+            await signOut(auth);
+            toast.success('Logged out successfully!');
+            router.push('/');
+        } catch (error) {
+            console.error("Logout failed:", error);
+            toast.error('Failed to log out.');
+        }
+    };
 
     useEffect(() => {
         if (currentUser) {
@@ -99,6 +114,7 @@ export default function ProfilePage() {
                             </ul>
                             <div className="border-t border-slate-200 mt-4 pt-4">
                                 <button
+                                    onClick={handleLogout}
                                     className="w-full flex items-center gap-3 p-3 rounded-md text-left text-red-600 hover:bg-red-50 transition-colors"
                                 >
                                     <LogOut size={20} />
@@ -111,7 +127,7 @@ export default function ProfilePage() {
                     {/* Main Content */}
                     <main className="w-full md:w-3/4">
                         <div className="bg-white p-6 sm:p-8 rounded-lg shadow-sm">
-                            <h2 className="text-2xl font-bold text-slate-800 mb-6 capitalize">{activeTab}</h2>
+                            <h2 className="text-2xl font-bold text-slate-800 mb-6 capitalize">{activeTab.replace('&', '&amp;')}</h2>
                             {renderContent()}
                         </div>
                     </main>
