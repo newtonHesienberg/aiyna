@@ -43,6 +43,7 @@ export default function LoginPage() {
                     password: formData.password.trim(),
                     firstName: formData.firstName?.trim(),
                     lastName: formData.lastName?.trim(),
+                    mobile: formData.mobile?.trim(),
                 }),
             });
 

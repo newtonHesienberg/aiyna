@@ -4,8 +4,7 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('users', {
       id: {
-        type: Sequelize.INTEGER,
-        autoIncrement: true,
+        type: Sequelize.STRING,
         primaryKey: true,
         allowNull: false
       },
@@ -22,6 +21,11 @@ module.exports = {
         allowNull: false,
         unique: true
       },
+      mobile: {
+        type: Sequelize.STRING,
+        allowNull: true,
+        unique: true
+      },
       profile_image: {
         type: Sequelize.TEXT, 
         allowNull: true
@@ -30,6 +34,14 @@ module.exports = {
         type: Sequelize.BOOLEAN,
         allowNull: false,
         defaultValue: false
+      },
+      dob: {
+        type: Sequelize.DATEONLY,
+        allowNull: true
+      },
+      gender: {
+        type: Sequelize.ENUM('Male', 'Female', 'Other'),
+        allowNull: true
       },
       created_at: {
         type: Sequelize.DATE,

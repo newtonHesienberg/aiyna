@@ -15,11 +15,15 @@ module.exports = (sequelize, DataTypes) => {
   }
 
   User.init({
-    // 'id' is automatically created by Sequelize as the primary key
+    id: {
+      type: DataTypes.STRING,
+      primaryKey: true,
+      allowNull: false
+    },
     firstName: {
       type: DataTypes.STRING,
       allowNull: false,
-      field: 'first_name' // Maps this model attribute to the database column
+      field: 'first_name'
     },
     lastName: {
       type: DataTypes.STRING,
@@ -34,6 +38,11 @@ module.exports = (sequelize, DataTypes) => {
         isEmail: true // Adds a validation check for email format
       }
     },
+    mobile: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: true
+    },
     profileImage: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -44,6 +53,16 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       defaultValue: false,
       field: 'email_verified'
+    },
+    dob: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+      field: 'dob'
+    },
+    gender: {
+      type: DataTypes.ENUM('Male', 'Female', 'Other'),
+      allowNull: true,
+      field: 'gender'
     }
   }, {
     sequelize,
