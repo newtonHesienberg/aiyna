@@ -43,7 +43,6 @@ const Navbar = () => {
     const profileMenuItems = [
         { name: 'My Account', path: '/profile' },
         { name: 'My Orders', path: '/orders' },
-        { name: 'Return/Exchange', path: '#' },
         { name: 'Support', path: '#' },
     ]
 

@@ -2,16 +2,13 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { auth } from '../../../lib/firebase';
+import { auth } from '@/lib/firebase';
 import {
-    createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
     GoogleAuthProvider,
     signInWithPopup,
-    updateProfile
 } from 'firebase/auth';
 import toast from 'react-hot-toast';
-//import { createUser } from '../../../lib/api'; // Import the new API function
 
 export default function LoginPage() {
     const [isSigningUp, setIsSigningUp] = useState(false);
@@ -30,52 +27,56 @@ export default function LoginPage() {
     };
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
+    e.preventDefault();
 
-        if (isSigningUp) {
-            // Handle Sign Up
-            const signupPromise = createUserWithEmailAndPassword(auth, formData.email, formData.password)
-                .then(async (userCredential) => {
-                    const user = userCredential.user;
-                    const fullName = `${formData.firstName} ${formData.lastName}`.trim();
-
-                    // Update Firebase profile
-                    await updateProfile(user, { displayName: fullName });
-
-                    // Save additional user details to your database via API
-                    // await createUser({
-                    //     id: user.uid,
-                    //     firstName: formData.firstName,
-                    //     lastName: formData.lastName,
-                    //     email: user.email,
-                    //     mobile: formData.mobile,
-                    // });
-
-                    return user;
-                });
-
-            toast.promise(signupPromise, {
-                loading: 'Creating account...',
-                success: () => {
-                    router.push('/');
-                    return 'Account created successfully!';
+    if (isSigningUp) {
+        // Handle Sign Up
+        const signupAndLoginPromise = async () => {
+            // Step 1: Call the server API to create the user
+            const response = await fetch('/api/auth/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
                 },
-                error: (error) => error.message,
+                body: JSON.stringify({
+                    email: formData.email.trim(),
+                    password: formData.password.trim(),
+                    firstName: formData.firstName?.trim(),
+                    lastName: formData.lastName?.trim(),
+                }),
             });
 
-        } else {
-            // Handle Login
-            const loginPromise = signInWithEmailAndPassword(auth, formData.email, formData.password);
-            toast.promise(loginPromise, {
-                loading: 'Logging in...',
-                success: () => {
-                    router.push('/');
-                    return 'Logged in successfully!';
-                },
-                error: (error) => error.message,
-            });
-        }
-    };
+            if (!response.ok) {
+                const { error } = await response.json();
+                throw new Error(error || 'Failed to create account.');
+            }
+
+            // Step 2: If signup is successful, sign the user in
+            await signInWithEmailAndPassword(auth, formData.email, formData.password);
+        };
+
+        toast.promise(signupAndLoginPromise(), {
+            loading: 'Creating your account...',
+            success: () => {
+                router.push('/');
+                return 'Account created and logged in successfully!';
+            },
+            error: (error) => error.message,
+        });
+
+    } else {
+        // Handle Login
+        const loginPromise = signInWithEmailAndPassword(auth, formData.email, formData.password);
+        toast.promise(loginPromise, {
+            loading: 'Logging in...',
+            success: () => {
+                router.push('/');
+                return 'Logged in successfully!';
+            },
+            error: (error) => error.message,
+        });
+    }
+};
 
     const handleGoogleSignIn = async () => {
         const provider = new GoogleAuthProvider();
