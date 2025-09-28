@@ -1,13 +1,29 @@
-const config = require('./postgres.js');
+require('dotenv').config();
 
 module.exports = {
-  production: {
-    username: config.user,
-    password: config.password,
-    database: config.database,
-    host: config.host,
-    port: config.port,
+  development: {
+    username: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
     dialect: 'postgres',
+    dialectModule: require('pg'),
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    }
+  },
+  production: {
+    username: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    dialect: 'postgres',
+    dialectModule: require('pg'),
     dialectOptions: {
       ssl: {
         require: true,
