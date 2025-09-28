@@ -9,22 +9,6 @@ module.exports = {
         primaryKey: true,
         allowNull: false
       },
-      user_id: {
-        type: Sequelize.UUID,
-        defaultValue: Sequelize.literal('gen_random_uuid()'),
-        allowNull: false,
-        unique: true
-      },
-      email: {
-        type: Sequelize.STRING,
-        allowNull: false,
-        unique: true
-      },
-      mobile: {
-        type: Sequelize.STRING,
-        allowNull: false,
-        unique: true
-      },
       first_name: {
         type: Sequelize.STRING,
         allowNull: false
@@ -32,6 +16,20 @@ module.exports = {
       last_name: {
         type: Sequelize.STRING,
         allowNull: false
+      },
+      email: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        unique: true
+      },
+      profile_image: {
+        type: Sequelize.TEXT, 
+        allowNull: true
+      },
+      email_verified: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
       },
       created_at: {
         type: Sequelize.DATE,
@@ -45,11 +43,6 @@ module.exports = {
       }
     });
 
-    await queryInterface.addIndex('users', ['mobile'], {
-      unique: true,
-      name: 'users_mobile_idx'
-    });
-
     await queryInterface.addIndex('users', ['email'], {
       unique: true,
       name: 'users_email_idx'
@@ -57,7 +50,6 @@ module.exports = {
   },
 
   async down(queryInterface) {
-    await queryInterface.removeIndex('users', 'users_mobile_idx');
     await queryInterface.removeIndex('users', 'users_email_idx');
     await queryInterface.dropTable('users');
   }
