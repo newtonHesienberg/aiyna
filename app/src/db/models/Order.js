@@ -1,44 +1,73 @@
-'use strict';
-const { Model } = require('sequelize');
-
+"use strict";
+const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Order extends Model {
     static associate(models) {
-      Order.belongsTo(models.User, { foreignKey: 'user_id' });
-      Order.hasMany(models.OrderItem, { foreignKey: 'order_id' });
+      // An Order belongs to one User
+      Order.belongsTo(models.User, {
+        foreignKey: "user_id",
+        as: "user",
+      });
+      // An Order belongs to one Address
+      Order.belongsTo(models.Address, {
+        foreignKey: "address_id",
+        as: "shippingAddress",
+      });
+      // An Order has many OrderItems
+      Order.hasMany(models.OrderItem, {
+        foreignKey: "order_id",
+        as: "items",
+      });
     }
   }
-
   Order.init(
     {
-      order_id: {
+      id: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
-      },
-      user_id: {
-        type: DataTypes.UUID,
         allowNull: false,
       },
-      order_date: {
-        type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW,
+      userId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        field: "user_id",
       },
-      total_amount: DataTypes.DECIMAL,
+      addressId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        field: "address_id",
+      },
+      total: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false,
+      },
       status: {
-        type: DataTypes.STRING,
-        defaultValue: 'pending_fulfillment',
+        type: DataTypes.ENUM(
+          "PENDING",
+          "PROCESSING",
+          "SHIPPED",
+          "DELIVERED",
+          "CANCELLED"
+        ),
+        allowNull: false,
+        defaultValue: "PENDING",
       },
-      shipping_address: DataTypes.JSON,
-      payment_id: DataTypes.STRING,
+      isPaid: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        field: "is_paid",
+      },
     },
     {
       sequelize,
-      modelName: 'Order',
-      tableName: 'Orders',
-      timestamps: false,
+      modelName: "Order",
+      tableName: "orders",
+      timestamps: true,
+      underscored: true,
+      createdAt: "created_at",
+      updatedAt: "updated_at",
     }
   );
-
   return Order;
 };

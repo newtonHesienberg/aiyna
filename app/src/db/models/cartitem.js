@@ -3,31 +3,31 @@ const {
   Model
 } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
-  class OrderItem extends Model {
+  class CartItem extends Model {
     static associate(models) {
-      // An OrderItem belongs to one Order
-      OrderItem.belongsTo(models.Order, {
-        foreignKey: 'order_id',
-        as: 'order'
+      // A CartItem belongs to one Cart
+      CartItem.belongsTo(models.Cart, {
+        foreignKey: 'cart_id',
+        as: 'cart'
       });
-      // An OrderItem belongs to one Product
-      OrderItem.belongsTo(models.Product, {
+      // A CartItem belongs to one Product
+      CartItem.belongsTo(models.Product, {
         foreignKey: 'product_id',
         as: 'product'
       });
     }
   }
-  OrderItem.init({
+  CartItem.init({
     id: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
         allowNull: false
     },
-    orderId: {
+    cartId: {
         type: DataTypes.UUID,
         allowNull: false,
-        field: 'order_id'
+        field: 'cart_id'
     },
     productId: {
         type: DataTypes.UUID,
@@ -38,16 +38,13 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: false
     },
-    priceAtPurchase: {
-        type: DataTypes.DECIMAL(10, 2),
-        allowNull: false,
-        field: 'price_at_purchase'
-    }
+    color: DataTypes.STRING,
+    size: DataTypes.STRING
   }, {
     sequelize,
-    modelName: 'OrderItem',
-    tableName: 'order_items',
+    modelName: 'CartItem',
+    tableName: 'cart_items',
     timestamps: false
   });
-  return OrderItem;
+  return CartItem;
 };

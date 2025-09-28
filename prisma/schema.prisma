@@ -1,163 +1,163 @@
-generator client {
-    provider        = "prisma-client-js"
-    previewFeatures = ["driverAdapters"]
-}
+-- SQL SchemaforAinaWebApp
+--Database: PostgreSQL
 
-datasource db {
-    provider  = "postgresql"
-    url       = env("DATABASE_URL")
-    directUrl = env("DIRECT_URL")
-}
+-- 1. Users Table: Stores user account information.
+CREATE TABLE "Users" (
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "name" VARCHAR(255),
+    "email" VARCHAR(255) UNIQUE NOT NULL,
+    "password" VARCHAR(255), -- For credential-based login
+    "image" TEXT,
+    "emailVerified" TIMESTAMPTZ,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
-// Required for creating a User: id, name, email, image, cart (optional JSON string)
-model User {
-    id    String @id
-    name  String
-    email String
-    image String
-    cart  Json   @default("{}")
+-- 2. Categories Table: Stores main product categories (e.g., Men, Women).
+CREATE TABLE "Categories" (
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "name" VARCHAR(255) UNIQUE NOT NULL,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
-    // Relations
-    ratings     Rating[]
-    Address     Address[]
-    store       Store?
-    buyerOrders Order[]   @relation("BuyerRelation")
-}
+-- Child table for Categories (e.g., T-shirts, Hoodies).
+CREATE TABLE "SubCategories" (
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "name" VARCHAR(255) NOT NULL,
+    "categoryId" UUID NOT NULL REFERENCES "Categories"("id") ON DELETE CASCADE,
+    UNIQUE("name", "categoryId")
+);
 
-// Required for creating a Product: name, description, mrp, price, images, category, storeId
-model Product {
-    id          String   @id @default(cuid())
-    name        String
-    description String
-    mrp         Float
-    price       Float
-    images      String[]
-    category    String
-    inStock     Boolean  @default(true)
-    storeId     String
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
+-- 3. Products Table: Stores all product information.
+CREATE TABLE "Products" (
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "name" VARCHAR(255) NOT NULL,
+    "description" TEXT,
+    "mrp" NUMERIC(10, 2) NOT NULL,
+    "price" NUMERIC(10, 2) NOT NULL,
+    "images" TEXT[], -- Array of image URLs
+    "inStock" BOOLEAN NOT NULL DEFAULT TRUE,
+    "subCategoryId" UUID NOT NULL REFERENCES "SubCategories"("id"),
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
-    // Relations
-    store      Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
-    orderItems OrderItem[]
-    rating     Rating[]
-}
+-- 4. ThemeSections Table: For homepage themed sections like 'Anime', 'Cars'.
+CREATE TABLE "ThemeSections" (
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "name" VARCHAR(255) UNIQUE NOT NULL,
+    "title" VARCHAR(255),
+    "description" TEXT,
+    "imageUrl" TEXT,
+    "isActive" BOOLEAN NOT NULL DEFAULT TRUE
+);
 
-enum OrderStatus {
-    ORDER_PLACED
-    PROCESSING
-    SHIPPED
-    DELIVERED
-}
+-- Mapping table to link themes to sub-categories.
+CREATE TABLE "ThemeSectionCategories" (
+    "themeSectionId" UUID NOT NULL REFERENCES "ThemeSections"("id") ON DELETE CASCADE,
+    "subCategoryId" UUID NOT NULL REFERENCES "SubCategories"("id") ON DELETE CASCADE,
+    PRIMARY KEY ("themeSectionId", "subCategoryId")
+);
 
-enum PaymentMethod {
-    COD
-    STRIPE
-}
+-- 5. Ratings Table: Stores user reviews and ratings for products.
+CREATE TABLE "Ratings" (
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "userId" UUID NOT NULL REFERENCES "Users"("id") ON DELETE CASCADE,
+    "productId" UUID NOT NULL REFERENCES "Products"("id") ON DELETE CASCADE,
+    "rating" INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    "reviewText" TEXT,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE("userId", "productId") -- A user can review a product only once.
+);
 
-// Required for creating an Order: total, userId, storeId, addressId, isPaid, paymentMethod, isCouponUsed, coupon (JSON), orderItems (nested)
-model Order {
-    id            String        @id @default(cuid())
-    total         Float
-    status        OrderStatus   @default(ORDER_PLACED)
-    userId        String
-    storeId       String
-    addressId     String
-    isPaid        Boolean       @default(false)
-    paymentMethod PaymentMethod
-    createdAt     DateTime      @default(now())
-    updatedAt     DateTime      @updatedAt
-    isCouponUsed  Boolean       @default(false)
-    coupon        Json          @default("{}")
-    orderItems    OrderItem[]
+-- 6. Specs Table: For product specifications (e.g., Material: Cotton).
+CREATE TABLE "Specs" (
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "productId" UUID NOT NULL REFERENCES "Products"("id") ON DELETE CASCADE,
+    "key" VARCHAR(255) NOT NULL,
+    "value" VARCHAR(255) NOT NULL
+);
 
-    // Relations
-    user    User    @relation("BuyerRelation", fields: [userId], references: [id])
-    store   Store   @relation(fields: [storeId], references: [id])
-    address Address @relation(fields: [addressId], references: [id])
-}
+-- 7. Address Table: Stores shipping addresses for users.
+CREATE TABLE "Address" (
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "userId" UUID NOT NULL REFERENCES "Users"("id") ON DELETE CASCADE,
+    "name" VARCHAR(255) NOT NULL,
+    "street" TEXT NOT NULL,
+    "city" VARCHAR(255) NOT NULL,
+    "state" VARCHAR(255) NOT NULL,
+    "zipCode" VARCHAR(20) NOT NULL,
+    "country" VARCHAR(255) NOT NULL,
+    "phone" VARCHAR(50)
+);
 
-// Required for creating an OrderItem: orderId, productId, quantity, price
-model OrderItem {
-    orderId   String
-    productId String
-    quantity  Int
-    price     Float
+-- 8. Coupon Table: Stores discount coupons.
+CREATE TABLE "Coupon" (
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "code" VARCHAR(255) UNIQUE NOT NULL,
+    "discount" NUMERIC(5, 2) NOT NULL,
+    "isActive" BOOLEAN NOT NULL DEFAULT TRUE,
+    "expiresAt" TIMESTAMPTZ
+);
 
-    // Relations
-    order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-    product Product @relation(fields: [productId], references: [id])
+-- 9. Orders Table: Header information for a customer's order.
+CREATE TABLE "Orders" (
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "userId" UUID NOT NULL REFERENCES "Users"("id") ON DELETE CASCADE,
+    "addressId" UUID NOT NULL REFERENCES "Address"("id"),
+    "total" NUMERIC(10, 2) NOT NULL,
+    "status" VARCHAR(50) NOT NULL DEFAULT 'PENDING',
+    "isPaid" BOOLEAN NOT NULL DEFAULT FALSE,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
-    @@id([orderId, productId])
-}
+-- 10. OrderItems Table: Line items for each order.
+CREATE TABLE "OrderItems" (
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "orderId" UUID NOT NULL REFERENCES "Orders"("id") ON DELETE CASCADE,
+    "productId" UUID NOT NULL REFERENCES "Products"("id"),
+    "quantity" INTEGER NOT NULL,
+    "priceAtPurchase" NUMERIC(10, 2) NOT NULL -- Price of the product when the order was placed.
+);
 
-// Required for creating a Rating: rating, review, userId, productId
-model Rating {
-    id        String   @id @default(cuid())
-    rating    Int
-    review    String
-    userId    String
-    productId String
-    orderId   String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+-- 11. Cart Table: The container for a user's cart.
+CREATE TABLE "Cart" (
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "userId" UUID UNIQUE NOT NULL REFERENCES "Users"("id") ON DELETE CASCADE,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
-    // Relations
-    user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-    product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+-- 12. CartItems Table: The actual items within a user's cart.
+CREATE TABLE "CartItems" (
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "cartId" UUID NOT NULL REFERENCES "Cart"("id") ON DELETE CASCADE,
+    "productId" UUID NOT NULL REFERENCES "Products"("id"),
+    "quantity" INTEGER NOT NULL,
+    "color" VARCHAR(100),
+    "size" VARCHAR(100),
+    UNIQUE("cartId", "productId", "color", "size")
+);
 
-    @@unique([userId, productId, orderId])
-}
+-- 13. Wishlist Table: The container for a user's wishlist.
+CREATE TABLE "Wishlist" (
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "userId" UUID UNIQUE NOT NULL REFERENCES "Users"("id") ON DELETE CASCADE
+);
 
-// Required for creating an Address: userId, name, email, street, city, state, zip, country, phone
-model Address {
-    id        String   @id @default(cuid())
-    userId    String
-    name      String
-    email     String
-    street    String
-    city      String
-    state     String
-    zip       String
-    country   String
-    phone     String
-    createdAt DateTime @default(now())
+-- 14. WishlistItems Table: The actual items within a user's wishlist.
+CREATE TABLE "WishlistItems" (
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "wishlistId" UUID NOT NULL REFERENCES "Wishlist"("id") ON DELETE CASCADE,
+    "productId" UUID NOT NULL REFERENCES "Products"("id"),
+    UNIQUE("wishlistId", "productId")
+);
 
-    // Relations
-    Order Order[]
-    user  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-// Required for creating a Coupon: code, description, discount, forNewUser, isPublic, expiresAt
-model Coupon {
-    code        String   @id
-    description String
-    discount    Float
-    forNewUser  Boolean
-    forMember   Boolean  @default(false)
-    isPublic    Boolean
-    expiresAt   DateTime
-    createdAt   DateTime @default(now())
-}
-
-// Required for creating a Store: userId, name, username, email, contact, logo, description, address (optional: , status, isActive)
-model Store {
-    id          String   @id @default(cuid())
-    userId      String   @unique
-    name        String
-    description String
-    username    String   @unique
-    address     String
-    status      String   @default("pending")
-    isActive    Boolean  @default(false)
-    logo        String
-    email       String
-    contact     String
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
-
-    Product Product[]
-    Order   Order[]
-    user    User      @relation(fields: [userId], references: [id])
-}
+-- 15. Feedback Table: Stores general user feedback about the website.
+CREATE TABLE "Feedback" (
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "userId" UUID REFERENCES "Users"("id") ON DELETE SET NULL, -- Optional: link to a user
+    "subject" VARCHAR(255),
+    "message" TEXT NOT NULL,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

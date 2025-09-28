@@ -1,5 +1,5 @@
-'use strict';
-const { Model } = require('sequelize');
+"use strict";
+const { Model } = require("sequelize");
 
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
@@ -11,70 +11,101 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // define association here
       // Example: User.hasMany(models.Post);
+      // A User can have many Addresses
+      User.hasMany(models.Address, {
+        foreignKey: "user_id",
+        as: "addresses",
+      });
+
+      User.hasMany(models.Order, {
+        foreignKey: "user_id",
+        as: "orders",
+      });
+
+      // A User has one Cart
+      User.hasOne(models.Cart, {
+        foreignKey: "user_id",
+        as: "cart",
+      });
+
+      // A User has one Wishlist
+      User.hasOne(models.Wishlist, {
+        foreignKey: "user_id",
+        as: "wishlist",
+      });
+
+      // A User can have many Feedback submissions
+      User.hasMany(models.Feedback, {
+        foreignKey: "user_id",
+        as: "feedback",
+      });
     }
   }
 
-  User.init({
-    id: {
-      type: DataTypes.STRING,
-      primaryKey: true,
-      allowNull: false
+  User.init(
+    {
+      id: {
+        type: DataTypes.STRING,
+        primaryKey: true,
+        allowNull: false,
+      },
+      firstName: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        field: "first_name",
+      },
+      lastName: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        field: "last_name",
+      },
+      email: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+        validate: {
+          isEmail: true, // Adds a validation check for email format
+        },
+      },
+      mobile: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        unique: true,
+      },
+      profileImage: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        field: "profile_image",
+      },
+      emailVerified: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+        field: "email_verified",
+      },
+      dob: {
+        type: DataTypes.DATEONLY,
+        allowNull: true,
+        field: "dob",
+      },
+      gender: {
+        type: DataTypes.ENUM("Male", "Female", "Other"),
+        allowNull: true,
+        field: "gender",
+      },
     },
-    firstName: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      field: 'first_name'
-    },
-    lastName: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      field: 'last_name'
-    },
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-      validate: {
-        isEmail: true // Adds a validation check for email format
-      }
-    },
-    mobile: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      unique: true
-    },
-    profileImage: {
-      type: DataTypes.STRING,
-      allowNull: true,
-      field: 'profile_image'
-    },
-    emailVerified: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false,
-      field: 'email_verified'
-    },
-    dob: {
-      type: DataTypes.DATEONLY,
-      allowNull: true,
-      field: 'dob'
-    },
-    gender: {
-      type: DataTypes.ENUM('Male', 'Female', 'Other'),
-      allowNull: true,
-      field: 'gender'
+    {
+      sequelize,
+      modelName: "User",
+      tableName: "users",
+      // Automatically manage createdAt and updatedAt fields
+      timestamps: true,
+      // Use snake_case for automatically added attributes (createdAt, updatedAt)
+      underscored: true,
+      createdAt: "created_at",
+      updatedAt: "updated_at",
     }
-  }, {
-    sequelize,
-    modelName: 'User',
-    tableName: 'users',
-    // Automatically manage createdAt and updatedAt fields
-    timestamps: true, 
-    // Use snake_case for automatically added attributes (createdAt, updatedAt)
-    underscored: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at'
-  });
+  );
 
   return User;
 };
