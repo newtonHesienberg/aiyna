@@ -3,8 +3,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/app/context/AuthContext";
 import toast from "react-hot-toast";
 import DatePickerInput from "@/components/DatePickerInput";
+import Loading from "@/components/Loading";
 
-// This is the default page for the /profile route
 export default function ProfilePage() {
     const { currentUser } = useAuth();
     const [dob, setDob] = useState(null);
@@ -13,21 +13,49 @@ export default function ProfilePage() {
         lastName: "",
         email: "",
         mobileNumber: "",
-        dob: "",
         gender: "",
     });
 
+    const [isLoading, setIsLoading] = useState(true);
+
     useEffect(() => {
-        if (currentUser) {
-            setFormData({
-                firstName: currentUser.displayName?.split(" ")[0] || "",
-                lastName: currentUser.displayName?.split(" ")[1] || "",
-                email: currentUser.email || "",
-                mobileNumber: currentUser.phoneNumber || "",
-                dob: "",
-                gender: "",
-            });
-        }
+        const fetchUserData = async () => {
+            if (currentUser) {
+                setIsLoading(true);
+                try {
+                    const idToken = await currentUser.getIdToken();
+                    const response = await fetch(`/api/users/${currentUser.uid}`, {
+                        headers: {
+                            'Authorization': `Bearer ${idToken}`,
+                        },
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch user data.');
+                    }
+
+                    const userDetails = await response.json();
+
+                    setFormData({
+                        firstName: userDetails.firstName || "",
+                        lastName: userDetails.lastName || "",
+                        email: userDetails.email || "",
+                        mobileNumber: userDetails.mobile || "",
+                        gender: userDetails.gender || "",
+                    });
+                    
+                    if (userDetails.dob) {
+                        setDob(new Date(userDetails.dob));
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch user details:", error);
+                } finally {
+                    setIsLoading(false);
+                }
+            }
+        };
+
+        fetchUserData();
     }, [currentUser]);
 
     const handleChange = (e) => {
@@ -38,11 +66,50 @@ export default function ProfilePage() {
         }));
     };
 
-    const handleSave = (e) => {
+    const handleSave = async (e) => {
         e.preventDefault();
-        console.log("Saving data:", formData);
-        toast.success("Profile updated successfully!");
+        const indianMobileRegex = /^[6-9]\d{9}$/;
+        if (formData.mobileNumber && !indianMobileRegex.test(formData.mobileNumber)) {
+            toast.error('Please enter a valid 10-digit Indian mobile number.');
+            return; // Stop the function if validation fails
+        }
+        if (currentUser) {
+            try {
+                const idToken = await currentUser.getIdToken();
+                const response = await fetch(`/api/users/${currentUser.uid}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${idToken}`,
+                    },
+                    body: JSON.stringify({
+                        firstName: formData.firstName,
+                        lastName: formData.lastName,
+                        mobile: formData.mobileNumber,
+                        dob: dob,
+                        gender: formData.gender,
+                    }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to update profile.');
+                }
+
+                toast.success("Profile updated successfully!");
+            } catch (error) {
+                toast.error(error.message);
+            }
+        }
     };
+
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center h-64">
+                <Loading />
+            </div>
+        );
+    }
 
     return (
         <form onSubmit={handleSave}>
@@ -83,14 +150,13 @@ export default function ProfilePage() {
                     id="email"
                     name="email"
                     value={formData.email}
-                    onChange={handleChange}
                     readOnly
                     className="w-full p-3 border border-slate-300 rounded-md bg-slate-100 cursor-not-allowed"
                 />
             </div>
             <div className="form-group mt-6">
                 <label className="block text-sm font-medium text-slate-600 mb-1" htmlFor="mobileNumber">
-                    Mobile Number *
+                    Mobile Number
                 </label>
                 <input
                     type="tel"
@@ -101,16 +167,15 @@ export default function ProfilePage() {
                     className="w-full p-3 border border-slate-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
                 />
             </div>
-                <div className="mt-6">
-                    <label className="block text-sm font-medium text-slate-600 mb-1" htmlFor="dob">
-                        DOB
-                    </label>
-                    <DatePickerInput
-                        selectedDate={dob}
-                        onChange={(date) => setDob(date)}
-                    />
-                </div>
-
+            <div className="mt-6">
+                <label className="block text-sm font-medium text-slate-600 mb-1" htmlFor="dob">
+                    Date of Birth
+                </label>
+                <DatePickerInput
+                    selectedDate={dob}
+                    onChange={(date) => setDob(date)}
+                />
+            </div>
             <div className="form-group mt-6">
                 <label className="block text-sm font-medium text-slate-600 mb-2">Gender</label>
                 <div className="flex gap-6">
@@ -118,8 +183,8 @@ export default function ProfilePage() {
                         <input
                             type="radio"
                             name="gender"
-                            value="male"
-                            checked={formData.gender === "male"}
+                            value="Male"
+                            checked={formData.gender === "Male"}
                             onChange={handleChange}
                             className="form-radio h-4 w-4 text-indigo-600"
                         />
@@ -129,8 +194,8 @@ export default function ProfilePage() {
                         <input
                             type="radio"
                             name="gender"
-                            value="female"
-                            checked={formData.gender === "female"}
+                            value="Female"
+                            checked={formData.gender === "Female"}
                             onChange={handleChange}
                             className="form-radio h-4 w-4 text-indigo-600"
                         />
@@ -149,4 +214,3 @@ export default function ProfilePage() {
         </form>
     );
 }
-

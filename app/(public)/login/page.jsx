@@ -81,14 +81,45 @@ export default function LoginPage() {
 
     const handleGoogleSignIn = async () => {
         const provider = new GoogleAuthProvider();
-        try {
-            await signInWithPopup(auth, provider);
-            toast.success('Logged in with Google!');
-            router.push('/');
-        } catch (error) {
-            toast.error('Failed to sign in with Google.');
-        }
+        const googleSignInPromise = async () => {
+            // Step 1: Sign in with Google
+            const result = await signInWithPopup(auth, provider);
+            const user = result.user;
+            const idToken = await user.getIdToken();
+            const [firstName, ...lastNameParts] = user.displayName.split(' ');
+            const lastName = lastNameParts.join(' ');
+
+            // Step 2: Send user data to your backend to save it
+            const response = await fetch('/api/auth/google-signin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${idToken}`,
+                },
+                body: JSON.stringify({
+                    uid: user.uid,
+                    email: user.email,
+                    firstName: firstName,
+                    lastName: lastName,
+                    profileImage: user.photoURL,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to save user data.');
+            }
+        };
+
+        toast.promise(googleSignInPromise(), {
+            loading: 'Signing in with Google...',
+            success: () => {
+                router.push('/');
+                return 'Logged in successfully!';
+            },
+            error: (err) => err.message || 'Failed to sign in with Google.',
+        });
     };
+
 
     return (
         <div className="min-h-[80vh] flex items-center justify-center bg-slate-50">

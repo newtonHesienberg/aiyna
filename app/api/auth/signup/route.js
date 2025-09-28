@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import admin from '@/lib/firebaseAdmin';
-import db from '@/app/src/db/models';
+import dbPromise from '@/app/src/db/models';
 
 export async function POST(req) {
     try {
+        const db = await dbPromise;
         const { email, password, firstName, lastName, mobile } = await req.json();
 
         // Create the Firebase user

@@ -1,49 +1,56 @@
 import { NextResponse } from 'next/server';
+import dbPromise from '@/app/src/db/models';
+import { Op } from 'sequelize';
+import validateUser from '@/app/src/middleware/validateUser';
 
-// In-memory "database"
-// NOTE: This will reset every time the server restarts.
-// In a real application, you would use a database like PostgreSQL, MongoDB, etc.
-let users = [
-    { id: 1, name: 'Alice', email: 'alice@example.com' },
-    { id: 2, name: 'Bob', email: 'bob@example.com' },
-];
-
-/**
- * @route   GET /api/users
- * @desc    Get all users
- */
-export async function GET(request, {params}) {
-    return NextResponse.json(users[0]);
-}
-
-/**
- * @route   POST /api/users
- * @desc    Create a new user
- */
-export async function POST(request, {params}) {
+const getUserHandler = async (request, { params }) => {
     try {
-        const newUser = await request.json();
+        const db = await dbPromise;
+        const {userId}  = await params;
+        const user = await db.User.findOne({
+            where: {
+                id: {
+                    [Op.eq]: userId
+                }
+            }
+        });
 
-        // Basic validation
-        if (!newUser.name || !newUser.email) {
-            return NextResponse.json(
-                { message: 'Name and email are required' },
-                { status: 400 }
-            );
+        if (!user) {
+            return NextResponse.json({ message: 'User not found' }, { status: 404 });
         }
 
-        // Add a unique ID and add to our "database"
-        newUser.id = Date.now(); // Simple unique ID
-        users.push(newUser);
-
-        return NextResponse.json(
-            { message: 'User created successfully', user: newUser },
-            { status: 201 } // 201 Created
-        );
+        return NextResponse.json(user);
     } catch (error) {
-        return NextResponse.json(
-            { message: 'Error creating user', error: error.message },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
-}
+};
+
+const updateUserHandler = async (request, { params }) => {
+    try {
+        const db = await dbPromise;
+        const { userId } = await params;
+        const body = await request.json();
+
+        const user = await db.User.findOne({
+            where: {
+                id: {
+                    [Op.eq]: userId
+                }
+            }
+        });
+
+        if (!user) {
+            return NextResponse.json({ message: 'User not found' }, { status: 404 });
+        }
+        
+        // Update the user with the new data
+        await user.update(body);
+
+        return NextResponse.json({ message: 'User updated successfully', user });
+    } catch (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+};
+
+export const GET = validateUser(getUserHandler);
+export const PATCH = validateUser(updateUserHandler);

@@ -13,30 +13,30 @@ module.exports = (sequelize, DataTypes) => {
       // Example: User.hasMany(models.Post);
       // A User can have many Addresses
       User.hasMany(models.Address, {
-        foreignKey: "user_id",
+        foreignKey: "id",
         as: "addresses",
       });
 
       User.hasMany(models.Order, {
-        foreignKey: "user_id",
+        foreignKey: "id",
         as: "orders",
       });
 
       // A User has one Cart
       User.hasOne(models.Cart, {
-        foreignKey: "user_id",
+        foreignKey: "id",
         as: "cart",
       });
 
       // A User has one Wishlist
       User.hasOne(models.Wishlist, {
-        foreignKey: "user_id",
+        foreignKey: "id",
         as: "wishlist",
       });
 
       // A User can have many Feedback submissions
       User.hasMany(models.Feedback, {
-        foreignKey: "user_id",
+        foreignKey: "id",
         as: "feedback",
       });
     }

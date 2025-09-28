@@ -1,57 +1,70 @@
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
 const Sequelize = require('sequelize');
-const { connectToPostgresDb } = require('../../../config/config.js'); // Adjust path if needed
-const basename = path.basename(__filename);
-const db = {};
+const { connectToPostgresDb } = require('../../../config/config.js');
 
-let sequelize;
+let dbPromise;
 
-const initialize = async () => {
-  if (db.sequelize) {
-    return; // Already initialized
-  }
+async function initialize() {
+    const sequelize = await connectToPostgresDb();
+    const db = {};
 
-  try {
-    sequelize = await connectToPostgresDb();
+    try {
+        // --- EXPLICIT MODEL LOADING ---
+        // Add all your model files to this array.
+        const models = [
+            require('./address'),
+            require('./cart'),
+            require('./cartitem'),
+            require('./category'),
+            require('./coupon'),
+            require('./feedback'),
+            require('./Order'),
+            require('./OrderItem'),
+            require('./Product'),
+            require('./productvariant'),
+            require('./rating'),
+            require('./spec'),
+            require('./subcategory'),
+            require('./themesection'),
+            require('./User'),
+            require('./wishlist'),
+            require('./wishlistitem'),
+        ];
 
-    // --- DYNAMIC MODEL LOADING ---
-    // Read all files in the current directory
-    fs.readdirSync(__dirname)
-      .filter(file => {
-        // Get all .js files that are not this file (index.js) and not hidden files
-        return (
-          file.indexOf('.') !== 0 &&
-          file !== basename &&
-          file.slice(-3) === '.js'
-        );
-      })
-      .forEach(file => {
-        // Require the model file and initialize it
-        const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
-        db[model.name] = model;
-      });
+        // Initialize each model and add it to the db object
+        for (const modelDefiner of models) {
+            const model = modelDefiner(sequelize, Sequelize.DataTypes);
+            db[model.name] = model;
+        }
 
-    // --- RUN ASSOCIATIONS ---
-    // This part remains the same
-    Object.keys(db).forEach(modelName => {
-      if (db[modelName].associate) {
-        db[modelName].associate(db);
-      }
-    });
+        // --- RUN ASSOCIATIONS ---
+        Object.keys(db).forEach(modelName => {
+            if (db[modelName].associate) {
+                db[modelName].associate(db);
+            }
+        });
 
-    db.sequelize = sequelize;
-    db.Sequelize = Sequelize;
+        db.sequelize = sequelize;
+        db.Sequelize = Sequelize;
 
-  } catch (error) {
-    console.error('Unable to initialize the database:', error);
-    process.exit(1);
-  }
-};
+    } catch (error) {
+        console.error('Unable to initialize the database:', error);
+        process.exit(1);
+    }
 
-// Initialize and export
-initialize();
+    return db;
+}
 
-module.exports = db;
+if (process.env.NODE_ENV === 'development') {
+    // In development, use a global variable to preserve the promise across HMR reloads
+    if (!global._dbPromise) {
+        global._dbPromise = initialize();
+    }
+    dbPromise = global._dbPromise;
+} else {
+    // In production, initialize once
+    dbPromise = initialize();
+}
+
+module.exports = dbPromise;
