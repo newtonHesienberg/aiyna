@@ -1,21 +1,61 @@
 import { NextResponse } from 'next/server';
 import validateUser from '@/app/src/middleware/validateUser';
-
-// Dummy data - in a real app, you'd fetch this from a database based on the user's ID
-let addresses = [
-    { id: 1, name: 'Home', address: '123 Maple St, Springfield, IL, 62704', phone: '555-123-4567' },
-    { id: 2, name: 'Work', address: '456 Oak Ave, Springfield, IL, 62704', phone: '555-987-6543' },
-];
+import dbPromise from '@/app/src/db/models';
+import { Op } from 'sequelize';
 
 /**
  * @route   GET /api/addresses
  * @desc    Get all addresses for the authenticated user
  */
 const getAddressesHandler = async (req) => {
-    // The user object (e.g., req.user.uid) is available here if you need it
-    // to fetch user-specific data from your database.
-    return NextResponse.json(addresses);
+    try {
+        const db = await dbPromise;
+        const addresses = await db.Address.findAll({
+            where: {
+                userId: {
+                    [Op.eq]: req.user.uid
+                }
+            }
+        });
+        return NextResponse.json(addresses);
+    } catch (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
 };
 
-// Wrap the handler with the validation middleware
+/**
+ * @route   POST /api/addresses
+ * @desc    Create a new address for the authenticated user
+ */
+const postAddressesHandler = async (req) => {
+    try {
+        const db = await dbPromise;
+        const body = await req.json();
+
+        // Validate required fields
+        const { name, street, city, state, zipCode, country, phone } = body;
+        if (!name || !street || !city || !state || !zipCode || !country) {
+            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+        }
+        
+        const newAddress = await db.Address.create({
+            userId: req.user.uid,
+            name,
+            street,
+            city,
+            state,
+            zipCode,
+            country,
+            phone
+        });
+
+        return NextResponse.json(newAddress, { status: 201 });
+    } catch (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+};
+
+
+// Wrap the handlers with the validation middleware
 export const GET = validateUser(getAddressesHandler);
+export const POST = validateUser(postAddressesHandler);

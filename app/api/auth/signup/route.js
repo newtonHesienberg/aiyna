@@ -22,6 +22,10 @@ export async function POST(req) {
             email,
             mobile
         });
+        
+        // Create a cart and wishlist for the new user
+        await db.Cart.create({ userId: userRecord.uid });
+        await db.Wishlist.create({ userId: userRecord.uid });
 
         return NextResponse.json({ uid: userRecord.uid }, { status: 201 });
     } catch (error) {

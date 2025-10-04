@@ -18,46 +18,7 @@ export default function ProfilePage() {
 
     const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchUserData = async () => {
-            if (currentUser) {
-                setIsLoading(true);
-                try {
-                    const idToken = await currentUser.getIdToken();
-                    const response = await fetch(`/api/users/${currentUser.uid}`, {
-                        headers: {
-                            'Authorization': `Bearer ${idToken}`,
-                        },
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('Failed to fetch user data.');
-                    }
-
-                    const userDetails = await response.json();
-
-                    setFormData({
-                        firstName: userDetails.firstName || "",
-                        lastName: userDetails.lastName || "",
-                        email: userDetails.email || "",
-                        mobileNumber: userDetails.mobile || "",
-                        gender: userDetails.gender || "",
-                    });
-                    
-                    if (userDetails.dob) {
-                        setDob(new Date(userDetails.dob));
-                    }
-                } catch (error) {
-                    console.error("Failed to fetch user details:", error);
-                } finally {
-                    setIsLoading(false);
-                }
-            }
-        };
-
-        fetchUserData();
-    }, [currentUser]);
-
+    // This function was missing. It updates the form state as you type.
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prevData) => ({
@@ -66,40 +27,104 @@ export default function ProfilePage() {
         }));
     };
 
+    useEffect(() => {
+        const loadProfile = async () => {
+            if (currentUser) {
+                // 1. Try to load from session storage for an instant UI update
+                const cachedProfile = sessionStorage.getItem('userProfile');
+                if (cachedProfile) {
+                    const userDetails = JSON.parse(cachedProfile);
+                    setFormData({
+                        firstName: userDetails.firstName || "",
+                        lastName: userDetails.lastName || "",
+                        email: userDetails.email || "",
+                        mobileNumber: userDetails.mobile || "",
+                        gender: userDetails.gender || "",
+                    });
+                    if (userDetails.dob) setDob(new Date(userDetails.dob));
+                    setIsLoading(false); // We have data to show, so stop loading
+                }
+
+                // 2. Always fetch fresh data from the API in the background
+                try {
+                    const idToken = await currentUser.getIdToken();
+                    const response = await fetch(`/api/users/${currentUser.uid}`, {
+                        headers: { 'Authorization': `Bearer ${idToken}` },
+                    });
+
+                    if (!response.ok) throw new Error('Failed to fetch user data.');
+                    
+                    const freshUserDetails = await response.json();
+
+                    // 3. Update state and session storage with the latest data
+                    setFormData({
+                        firstName: freshUserDetails.firstName || "",
+                        lastName: freshUserDetails.lastName || "",
+                        email: freshUserDetails.email || "",
+                        mobileNumber: freshUserDetails.mobile || "",
+                        gender: freshUserDetails.gender || "",
+                    });
+                    if (freshUserDetails.dob) setDob(new Date(freshUserDetails.dob));
+                    
+                    sessionStorage.setItem('userProfile', JSON.stringify(freshUserDetails));
+
+                } catch (error) {
+                    console.error("Failed to re-fetch user details:", error);
+                    if (!cachedProfile) { // Only show error if we have no data at all
+                        toast.error("Could not load your profile.");
+                    }
+                } finally {
+                    setIsLoading(false); // Ensure loading is off after API call
+                }
+            }
+        };
+
+        loadProfile();
+    }, [currentUser]);
+
     const handleSave = async (e) => {
         e.preventDefault();
         const indianMobileRegex = /^[6-9]\d{9}$/;
         if (formData.mobileNumber && !indianMobileRegex.test(formData.mobileNumber)) {
             toast.error('Please enter a valid 10-digit Indian mobile number.');
-            return; // Stop the function if validation fails
+            return;
         }
         if (currentUser) {
-            try {
+            const savePromise = async () => {
                 const idToken = await currentUser.getIdToken();
+                const payload = {
+                    firstName: formData.firstName,
+                    lastName: formData.lastName,
+                    mobile: formData.mobileNumber,
+                    dob: dob,
+                    gender: formData.gender,
+                };
+                
                 const response = await fetch(`/api/users/${currentUser.uid}`, {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${idToken}`,
                     },
-                    body: JSON.stringify({
-                        firstName: formData.firstName,
-                        lastName: formData.lastName,
-                        mobile: formData.mobileNumber,
-                        dob: dob,
-                        gender: formData.gender,
-                    }),
+                    body: JSON.stringify(payload),
                 });
 
                 if (!response.ok) {
                     const errorData = await response.json();
                     throw new Error(errorData.error || 'Failed to update profile.');
                 }
+                
+                const { user: updatedUser } = await response.json();
+                
+                // On success, update session storage with the new data
+                sessionStorage.setItem('userProfile', JSON.stringify(updatedUser));
+            };
 
-                toast.success("Profile updated successfully!");
-            } catch (error) {
-                toast.error(error.message);
-            }
+            toast.promise(savePromise(), {
+                loading: 'Updating profile...',
+                success: "Profile updated successfully!",
+                error: (err) => err.message,
+            });
         }
     };
 

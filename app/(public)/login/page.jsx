@@ -27,57 +27,74 @@ export default function LoginPage() {
     };
 
     const handleSubmit = async (e) => {
-    e.preventDefault();
+        e.preventDefault();
 
-    if (isSigningUp) {
-        // Handle Sign Up
-        const signupAndLoginPromise = async () => {
-            // Step 1: Call the server API to create the user
-            const response = await fetch('/api/auth/signup', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+        if (isSigningUp) {
+            // Handle Sign Up
+            const signupAndLoginPromise = async () => {
+                // Step 1: Call the server API to create the user
+                const response = await fetch('/api/auth/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: formData.email.trim(),
+                        password: formData.password.trim(),
+                        firstName: formData.firstName?.trim(),
+                        lastName: formData.lastName?.trim(),
+                        mobile: formData.mobile?.trim(),
+                    }),
+                });
+
+                if (!response.ok) {
+                    const { error } = await response.json();
+                    throw new Error(error || 'Failed to create account.');
+                }
+
+                // Step 2: If signup is successful, sign the user in
+                await signInWithEmailAndPassword(auth, formData.email, formData.password);
+            };
+
+            toast.promise(signupAndLoginPromise(), {
+                loading: 'Creating your account...',
+                success: () => {
+                    router.push('/');
+                    return 'Account created and logged in successfully!';
                 },
-                body: JSON.stringify({
-                    email: formData.email.trim(),
-                    password: formData.password.trim(),
-                    firstName: formData.firstName?.trim(),
-                    lastName: formData.lastName?.trim(),
-                    mobile: formData.mobile?.trim(),
-                }),
+                error: (error) => error.message,
             });
 
-            if (!response.ok) {
-                const { error } = await response.json();
-                throw new Error(error || 'Failed to create account.');
-            }
+        } else {
+            const loginPromise = async () => {
+                const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+                const idToken = await userCredential.user.getIdToken();
 
-            // Step 2: If signup is successful, sign the user in
-            await signInWithEmailAndPassword(auth, formData.email, formData.password);
-        };
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ idToken }),
+                });
 
-        toast.promise(signupAndLoginPromise(), {
-            loading: 'Creating your account...',
-            success: () => {
-                router.push('/');
-                return 'Account created and logged in successfully!';
-            },
-            error: (error) => error.message,
-        });
+                if (!response.ok) {
+                    const { error } = await response.json();
+                    throw new Error(error || 'Failed to login.');
+                }
+                // a success toast is shown by the toast.promise
+            };
 
-    } else {
-        // Handle Login
-        const loginPromise = signInWithEmailAndPassword(auth, formData.email, formData.password);
-        toast.promise(loginPromise, {
-            loading: 'Logging in...',
-            success: () => {
-                router.push('/');
-                return 'Logged in successfully!';
-            },
-            error: (error) => error.message,
-        });
-    }
-};
+            toast.promise(loginPromise, {
+                loading: 'Logging in...',
+                success: () => {
+                    router.push('/');
+                    return 'Logged in successfully!';
+                },
+                error: (error) => error.message,
+            });
+        }
+    };
 
     const handleGoogleSignIn = async () => {
         const provider = new GoogleAuthProvider();
