@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import dbPromise from '@/app/src/db/models';
 import validateUser from '@/app/src/middleware/validateUser';
-import dbPromise from '@/app/src/db/models';
 import { Op } from 'sequelize';
 
 /**
