@@ -19,12 +19,22 @@ export async function GET(req) {
             limit,
             offset,
             include: [
-                { model: db.SubCategory, as: 'subCategory', include: [{ model: db.Category, as: 'category' }] },
+                // These are `belongsTo` or `hasOne` associations, which are fine.
+                {
+                    model: db.SubCategory,
+                    as: 'subCategory',
+                    include: [{ model: db.Category, as: 'category' }]
+                },
+                // These are `hasMany` associations, which can cause count issues.
                 { model: db.Spec, as: 'specs' },
                 { model: db.ProductVariant, as: 'variants' },
-                { model: db.Rating, as: 'ratings' } // Also including ratings
+                {
+                    model: db.Rating,
+                    as: 'ratings',
+                    required: false // FIX: Changed `require` to `required: false` for a LEFT JOIN.
+                }
             ],
-            distinct: true // Important for correct counting with includes
+            distinct: true, // This is crucial for counting distinct Products instead of total rows.
         });
 
         return NextResponse.json({
@@ -72,7 +82,7 @@ export async function POST(req) {
 
         // Refetch the created product with all its associations to return it
         const result = await db.Product.findByPk(newProduct.id, {
-             include: [
+            include: [
                 { model: db.SubCategory, as: 'subCategory', include: [{ model: db.Category, as: 'category' }] },
                 { model: db.Spec, as: 'specs' },
                 { model: db.ProductVariant, as: 'variants' }

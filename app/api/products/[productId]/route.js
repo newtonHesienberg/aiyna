@@ -9,7 +9,7 @@ import dbPromise from '@/app/src/db/models';
 export async function GET(req, { params }) {
     try {
         const db = await dbPromise;
-        const { productId } = params;
+        const { productId } = await params;
 
         const product = await db.Product.findByPk(productId, {
             include: [
@@ -26,7 +26,7 @@ export async function GET(req, { params }) {
 
         return NextResponse.json(product);
     } catch (error) {
-        console.error(`Error fetching product ${params.productId}:`, error);
+        console.error(`Error fetching product ${productId}:`, error);
         return NextResponse.json({ error: 'Failed to fetch product.' }, { status: 500 });
     }
 }
@@ -38,7 +38,7 @@ export async function GET(req, { params }) {
  */
 export async function PUT(req, { params }) {
     const db = await dbPromise;
-    const { productId } = params;
+    const { productId } = await params;
     const transaction = await db.sequelize.transaction();
 
     try {
@@ -95,7 +95,7 @@ export async function PUT(req, { params }) {
 export async function DELETE(req, { params }) {
     try {
         const db = await dbPromise;
-        const { productId } = params;
+        const { productId } = await params;
 
         const product = await db.Product.findByPk(productId);
         if (!product) {
@@ -107,7 +107,7 @@ export async function DELETE(req, { params }) {
         return NextResponse.json({ message: 'Product successfully deleted.' });
 
     } catch (error) {
-        console.error(`Error deleting product ${params.productId}:`, error);
+        console.error(`Error deleting product ${productId}:`, error);
         return NextResponse.json({ error: 'Failed to delete product.' }, { status: 500 });
     }
 }
