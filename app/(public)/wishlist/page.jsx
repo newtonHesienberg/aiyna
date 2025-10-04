@@ -3,7 +3,7 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import ProductCard from '@/components/ProductCard';
 import PageTitle from '@/components/PageTitle';
-import { addMultipleToCart } from '@/lib/features/cart/cartSlice'; // 1. Import new cart action
+import { addToCartAPI } from '@/lib/features/cart/cartSlice'; // 1. Import new cart action
 import { clearWishlist } from '@/lib/features/wishlist/wishlistSlice'; // 2. Import new wishlist action
 import toast from 'react-hot-toast';
 import { ShoppingCart } from 'lucide-react';
@@ -15,28 +15,39 @@ const WishlistPage = () => {
 
     const wishlistedProducts = allProducts.filter(product => wishlistedIds.includes(product.id));
 
+
     // 3. Create the handler function
     const handleAddAllToCart = () => {
         if (wishlistedProducts.length === 0) return;
-        
         // Dispatch actions to move items and clear wishlist
-        dispatch(addMultipleToCart(wishlistedProducts));
+        const addToCartPromise = wishlistedProducts.map(item => dispatch(addToCartAPI({
+            productId: item.id,
+            color: item.variants?.[0]?.color, // Default to the first color/size if available
+            size: item.variants?.[0]?.size,
+        })));
         dispatch(clearWishlist());
-        
-        toast.success('All wishlist items have been added to your cart!');
+
+        toast.promise(
+            Promise.all(addToCartPromise),
+            {
+                loading: 'Adding items to cart...',
+                success: `${wishlistedProducts.length} items added to your cart!`,
+                error: 'Could not add all items. Please try again.',
+            }
+        );
     };
 
     return (
         <div className="min-h-[70vh] mx-6">
             <div className="max-w-7xl mx-auto my-10">
                 <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8">
-                    <PageTitle 
-                        heading="My Wishlist" 
-                        text={`${wishlistedProducts.length} items saved`} 
+                    <PageTitle
+                        heading="My Wishlist"
+                        text={`${wishlistedProducts.length} items saved`}
                     />
                     {/* 4. Add the "Add All to Cart" button */}
                     {wishlistedProducts.length > 0 && (
-                        <button 
+                        <button
                             onClick={handleAddAllToCart}
                             className="flex items-center justify-center gap-2 bg-indigo-500 text-white font-medium py-3 px-6 rounded-md hover:bg-indigo-600 transition-transform active:scale-95"
                         >
@@ -45,7 +56,7 @@ const WishlistPage = () => {
                         </button>
                     )}
                 </div>
-                
+
                 {wishlistedProducts.length > 0 ? (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 xl:gap-8 mx-auto mb-32">
                         {wishlistedProducts.map((product) => (

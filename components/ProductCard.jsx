@@ -18,7 +18,7 @@ const ProductCard = ({ product }) => {
         dispatch(toggleWishlist(product.id));
     };
 
-    const rating = Math.round(product.rating.reduce((acc, curr) => acc + curr.rating, 0) / product.rating.length);
+    const rating = Math.round(product?.rating?.reduce((acc, curr) => acc + curr.rating, 0) / product?.rating?.length);
 
     return (
         <Link href={`/product/${product.id}`} className='group max-xl:mx-auto'>

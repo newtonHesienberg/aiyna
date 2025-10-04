@@ -4,28 +4,36 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import Loading from '@/components/Loading';
+import { useDispatch } from 'react-redux';
+import { fetchCart, clearCart } from '@/lib/features/cart/cartSlice';
+import { fetchWishlist, clearWishlist } from '@/lib/features/wishlist/wishlistSlice';
 
-// Create the authentication context
 const AuthContext = createContext();
 
-// Custom hook to use the AuthContext
 export const useAuth = () => useContext(AuthContext);
 
-// Provider component that wraps the app and makes auth object available
 export const AuthProvider = ({ children }) => {
     const [currentUser, setCurrentUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const dispatch = useDispatch();
 
     useEffect(() => {
-        // Subscribe to user auth state changes
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             setCurrentUser(user);
+            if (user) {
+                // When user logs in, fetch their cart and wishlist
+                dispatch(fetchCart());
+                dispatch(fetchWishlist());
+            } else {
+                // When user logs out, clear their cart and wishlist from redux
+                dispatch(clearCart());
+                dispatch(clearWishlist());
+            }
             setLoading(false);
         });
 
-        // Unsubscribe on cleanup
         return unsubscribe;
-    }, []);
+    }, [dispatch]);
 
     const value = {
         currentUser,

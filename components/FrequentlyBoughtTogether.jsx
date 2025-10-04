@@ -4,42 +4,51 @@ import { useSelector, useDispatch } from 'react-redux'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Plus, Equal } from 'lucide-react'
-import { addToCart } from '@/lib/features/cart/cartSlice'
+import { addToCartAPI } from '@/lib/features/cart/cartSlice'
 import toast from 'react-hot-toast'
 
 const FrequentlyBoughtTogether = ({ currentProduct }) => {
     const dispatch = useDispatch();
     const allProducts = useSelector(state => state.product.list);
-    const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '$';
+    const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '₹';
 
-    // In a real app, this logic would come from a recommendation engine.
-    // For now, we'll just find two other products from the same category or just the next two in the list.
+    // Recommendation logic: Find two other products from the same category.
     const recommendedProducts = allProducts
-        .filter(p => p.id !== currentProduct.id && p.category === currentProduct.category)
+        .filter(p => p.id !== currentProduct.id && p.subCategory?.name === currentProduct.subCategory?.name)
         .slice(0, 2);
 
-    // If there aren't enough in the same category, just grab any other two products.
+    // Fallback: If not enough products in the same category, grab any other two.
     if (recommendedProducts.length < 2) {
         const otherProducts = allProducts.filter(p => p.id !== currentProduct.id).slice(0, 2 - recommendedProducts.length);
         recommendedProducts.push(...otherProducts);
     }
     
     const allItems = [currentProduct, ...recommendedProducts];
-    const totalPrice = allItems.reduce((acc, item) => acc + item.price, 0);
+    const totalPrice = allItems.reduce((acc, item) => acc + parseFloat(item.price), 0);
 
     const handleAddAllToCart = () => {
-        allItems.forEach(item => {
-            dispatch(addToCart({
+        // Create an array of dispatch promises for each item
+        const promises = allItems.map(item =>
+            dispatch(addToCartAPI({
                 productId: item.id,
-                color: item.colors?.[0], // Default to the first color/size
-                size: item.sizes?.[0],
-            }));
-        });
-        toast.success(`${allItems.length} items added to your cart!`);
+                color: item.variants?.[0]?.color, // Default to the first color/size if available
+                size: item.variants?.[0]?.size,
+            }))
+        );
+
+        // Use toast.promise to handle the array of API calls
+        toast.promise(
+            Promise.all(promises),
+            {
+                loading: 'Adding items to cart...',
+                success: `${allItems.length} items added to your cart!`,
+                error: 'Could not add all items. Please try again.',
+            }
+        );
     }
 
     if (recommendedProducts.length === 0) {
-        return null; // Don't render the component if there are no other products
+        return null; // Don't render if there are no other products to recommend
     }
 
     return (

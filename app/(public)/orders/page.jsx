@@ -1,16 +1,45 @@
 "use client";
 import { useEffect, useState } from "react";
-import { orderDummyData } from "@/assets/assets";
 import OrderItem from "@/components/OrderItem";
 import ProfileSidebar from "@/components/ProfileSideBar";
+import { useAuth } from "@/app/context/AuthContext";
+import Loading from "@/components/Loading";
+import toast from "react-hot-toast";
 
 export default function OrdersPage() {
     const [orders, setOrders] = useState([]);
+    const { currentUser } = useAuth();
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // In a real app, you would fetch this data from your API
-        setOrders(orderDummyData);
-    }, []);
+        const fetchOrders = async () => {
+            if(currentUser) {
+                try {
+                    const idToken = await currentUser.getIdToken();
+                    const response = await fetch('/api/orders', {
+                        headers: { 'Authorization': `Bearer ${idToken}` },
+                    });
+
+                    if(response.ok) {
+                        const data = await response.json();
+                        setOrders(data);
+                    } else {
+                        toast.error("Failed to fetch orders.");
+                    }
+                } catch(error) {
+                    toast.error("An error occurred while fetching orders.");
+                } finally {
+                    setLoading(false);
+                }
+            } else {
+                setLoading(false);
+            }
+        }
+        
+        fetchOrders();
+    }, [currentUser]);
+
+    if(loading) return <Loading />;
 
     return (
         <div className="bg-slate-50 min-h-screen">
@@ -49,4 +78,3 @@ export default function OrdersPage() {
         </div>
     );
 }
-

@@ -1,17 +1,16 @@
 'use client'
-import { dummyStoreDashboardData } from "@/assets/assets"
 import Loading from "@/components/Loading"
 import { CircleDollarSignIcon, ShoppingBasketIcon, StarIcon, TagsIcon } from "lucide-react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { useSelector } from "react-redux"
 
 export default function Dashboard() {
 
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '$'
-
     const router = useRouter()
-
+    const { list: allProducts, loading: productsLoading } = useSelector(state => state.product);
     const [loading, setLoading] = useState(true)
     const [dashboardData, setDashboardData] = useState({
         totalProducts: 0,
@@ -20,21 +19,29 @@ export default function Dashboard() {
         ratings: [],
     })
 
+    useEffect(() => {
+        if (!productsLoading) {
+            const storeProducts = allProducts;
+            const totalProducts = storeProducts.length;
+            const totalEarnings = storeProducts.reduce((acc, product) => acc + parseFloat(product.price), 0);
+            const ratings = storeProducts.flatMap(p => p.ratings || []);
+
+            setDashboardData({
+                totalProducts,
+                totalEarnings,
+                totalOrders: 0, 
+                ratings
+            });
+            setLoading(false);
+        }
+    }, [allProducts, productsLoading]);
+
     const dashboardCardsData = [
         { title: 'Total Products', value: dashboardData.totalProducts, icon: ShoppingBasketIcon },
-        { title: 'Total Earnings', value: currency + dashboardData.totalEarnings, icon: CircleDollarSignIcon },
+        { title: 'Total Earnings', value: currency + dashboardData.totalEarnings.toFixed(2), icon: CircleDollarSignIcon },
         { title: 'Total Orders', value: dashboardData.totalOrders, icon: TagsIcon },
         { title: 'Total Ratings', value: dashboardData.ratings.length, icon: StarIcon },
     ]
-
-    const fetchDashboardData = async () => {
-        setDashboardData(dummyStoreDashboardData)
-        setLoading(false)
-    }
-
-    useEffect(() => {
-        fetchDashboardData()
-    }, [])
 
     if (loading) return <Loading />
 
@@ -70,19 +77,18 @@ export default function Dashboard() {
                                         <p className="font-light text-slate-500">{new Date(review.createdAt).toDateString()}</p>
                                     </div>
                                 </div>
-                                <p className="mt-3 text-slate-500 max-w-xs leading-6">{review.review}</p>
+                                <p className="mt-3 text-slate-500 max-w-xs leading-6">{review.reviewText}</p>
                             </div>
                             <div className="flex flex-col justify-between gap-6 sm:items-end">
                                 <div className="flex flex-col sm:items-end">
-                                    <p className="text-slate-400">{review.product?.category}</p>
-                                    <p className="font-medium">{review.product?.name}</p>
+                                    <p className="font-medium">{allProducts.find(p=>p.id === review.productId)?.name}</p>
                                     <div className='flex items-center'>
-                                        {Array(5).fill('').map((_, index) => (
-                                            <StarIcon key={index} size={17} className='text-transparent mt-0.5' fill={review.rating >= index + 1 ? "#00C950" : "#D1D5DB"} />
+                                        {Array(5).fill('').map((_, i) => (
+                                            <StarIcon key={i} size={17} className='text-transparent mt-0.5' fill={review.rating >= i + 1 ? "#00C950" : "#D1D5DB"} />
                                         ))}
                                     </div>
                                 </div>
-                                <button onClick={() => router.push(`/product/${review.product.id}`)} className="bg-slate-100 px-5 py-2 hover:bg-slate-200 rounded transition-all">View Product</button>
+                                <button onClick={() => router.push(`/product/${review.productId}`)} className="bg-slate-100 px-5 py-2 hover:bg-slate-200 rounded transition-all">View Product</button>
                             </div>
                         </div>
                     ))

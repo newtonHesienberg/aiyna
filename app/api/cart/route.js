@@ -6,8 +6,8 @@ import { Op } from 'sequelize';
 // Utility function to get or create a cart for a user
 const getOrCreateCart = async (db, userId) => {
     const [cart] = await db.Cart.findOrCreate({
-        where: { user_id: userId },
-        defaults: { user_id: userId }
+        where: { userId },
+        defaults: { userId }
     });
     return cart;
 };
@@ -63,8 +63,8 @@ const addToCartHandler = async (req) => {
         const cart = await getOrCreateCart(db, userId);
 
         const whereClause = {
-            cart_id: cart.id,
-            product_id: productId,
+            cartId: cart.id,
+            productId: productId,
             // Handle nulls for products that might not have color/size
             color: color || null,
             size: size || null

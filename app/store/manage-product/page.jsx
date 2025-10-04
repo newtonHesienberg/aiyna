@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import { toast } from "react-hot-toast"
 import Image from "next/image"
 import Loading from "@/components/Loading"
-import { productDummyData } from "@/assets/assets"
+import { useSelector } from "react-redux"
 
 export default function StoreManageProducts() {
 
@@ -11,21 +11,22 @@ export default function StoreManageProducts() {
 
     const [loading, setLoading] = useState(true)
     const [products, setProducts] = useState([])
+    const allProducts = useSelector(state => state.product.list);
 
-    const fetchProducts = async () => {
-        setProducts(productDummyData)
-        setLoading(false)
-    }
+    useEffect(() => {
+        if (allProducts.length > 0) {
+            // Assuming you'll have a way to identify the current store's products
+            // For now, this will show all products.
+            setProducts(allProducts);
+            setLoading(false);
+        }
+    }, [allProducts]);
 
     const toggleStock = async (productId) => {
         // Logic to toggle the stock of a product
 
 
     }
-
-    useEffect(() => {
-            fetchProducts()
-    }, [])
 
     if (loading) return <Loading />
 

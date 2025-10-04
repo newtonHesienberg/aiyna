@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import { MailIcon, MapPinIcon } from "lucide-react"
 import Loading from "@/components/Loading"
 import Image from "next/image"
-import { dummyStoreData, productDummyData } from "@/assets/assets"
+import { useSelector } from "react-redux"
 
 export default function StoreShop() {
 
@@ -13,16 +13,19 @@ export default function StoreShop() {
     const [products, setProducts] = useState([])
     const [storeInfo, setStoreInfo] = useState(null)
     const [loading, setLoading] = useState(true)
+    const allProducts = useSelector(state => state.product.list);
 
-    const fetchStoreData = async () => {
-        setStoreInfo(dummyStoreData)
-        setProducts(productDummyData)
-        setLoading(false)
-    }
 
     useEffect(() => {
-        fetchStoreData()
-    }, [])
+        if(allProducts.length > 0) {
+            const storeProducts = allProducts.filter(p => p.store?.username === username);
+            if(storeProducts.length > 0){
+                setStoreInfo(storeProducts[0].store);
+            }
+            setProducts(storeProducts);
+            setLoading(false);
+        }
+    }, [allProducts, username])
 
     return !loading ? (
         <div className="min-h-[70vh] mx-6">

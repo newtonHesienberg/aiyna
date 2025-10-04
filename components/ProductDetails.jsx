@@ -1,6 +1,5 @@
 "use client";
-
-import { addToCart, removeFromCart } from "@/lib/features/cart/cartSlice";
+import { addToCartAPI } from "@/lib/features/cart/cartSlice"; // Use the async thunk
 import {
   StarIcon,
   TagIcon,
@@ -9,37 +8,36 @@ import {
   UserIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useRef, useEffect } from "react"; // 1. Import useEffect
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
+import toast from "react-hot-toast";
 
 const ProductDetails = ({ product }) => {
   const productId = product.id;
-  const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || "$";
+  const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || "₹";
   const { cartItems } = useSelector((state) => state.cart);
   const dispatch = useDispatch();
   const router = useRouter();
 
   const [mainImage, setMainImage] = useState(product.images[0]);
-  const [selectedColor, setSelectedColor] = useState(product.colors?.[0]);
-  const [selectedSize, setSelectedSize] = useState(product.sizes?.[0]);
+  const [selectedColor, setSelectedColor] = useState(product.variants?.[0]?.color);
+  const [selectedSize, setSelectedSize] = useState(product.variants?.[0]?.size);
 
-  // --- MAGNIFIER STATE AND LOGIC (CORRECTED) ---
   const [showMagnifier, setShowMagnifier] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 }); // State to hold container dimensions
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 }); 
   const imageContainerRef = useRef(null);
   const magnifierSize = 100;
   const zoomLevel = 1.5;
 
-  // Effect to measure the image container's dimensions
   useEffect(() => {
     if (imageContainerRef.current) {
       const { width, height } =
         imageContainerRef.current.getBoundingClientRect();
       setDimensions({ width, height });
     }
-  }, [mainImage]); // Re-measure if the main image changes
+  }, [mainImage]);
 
   const handleMouseMove = (e) => {
     if (!imageContainerRef.current) return;
@@ -48,21 +46,31 @@ const ProductDetails = ({ product }) => {
     const y = e.clientY - top;
     setPosition({ x, y });
   };
-  // --- END OF MAGNIFIER LOGIC ---
+  
+  const itemInCart = Object.values(cartItems).find(
+    (item) =>
+      item.productId === productId &&
+      item.color === (selectedColor || null) &&
+      item.size === (selectedSize || null)
+  );
 
-  const itemId = `${productId}_${selectedColor}_${selectedSize}`;
-  const itemInCart = cartItems[itemId];
   const addToCartHandler = () => {
-    dispatch(
-      addToCart({ productId, color: selectedColor, size: selectedSize })
-    );
+    const promise = dispatch(addToCartAPI({ productId, color: selectedColor, size: selectedSize }));
+    toast.promise(promise, {
+        loading: 'Adding to cart...',
+        success: 'Added to cart!',
+        error: (err) => err.payload || 'Could not add to cart.',
+    });
   };
+
   const removeFromCartHandler = () => {
-    dispatch(removeFromCart({ itemId }));
+     // You would need a 'removeFromCartAPI' thunk for this to work with the API
+     console.log("Remove from cart action should be handled by an API thunk.");
   };
+
   const averageRating =
-    product.rating.reduce((acc, item) => acc + item.rating, 0) /
-    product.rating.length;
+    product?.ratings?.reduce((acc, item) => acc + item?.rating, 0) /
+    product?.ratings?.length;
 
   return (
     <div className="flex max-lg:flex-col gap-12 relative">
@@ -101,7 +109,6 @@ const ProductDetails = ({ product }) => {
             style={{ width: "auto", height: "auto" }}
           />
 
-          {/* The Magnifier Lens (visible on hover) */}
           <div
             style={{
               display: showMagnifier ? "block" : "none",
@@ -113,9 +120,8 @@ const ProductDetails = ({ product }) => {
               pointerEvents: "none",
               border: "2px solid #cbd5e1",
               borderRadius: "50%",
-              backgroundImage: `url(${mainImage.src})`, // Use .src directly
+              backgroundImage: `url(${mainImage})`,
               backgroundRepeat: "no-repeat",
-              // Use dimensions from state
               backgroundSize: `${dimensions.width * zoomLevel}px ${
                 dimensions.height * zoomLevel
               }px`,
@@ -145,61 +151,61 @@ const ProductDetails = ({ product }) => {
               />
             ))}
           <p className="text-sm ml-3 text-slate-500">
-            {product.rating.length} Reviews
+            {product?.ratings?.length} Reviews
           </p>
         </div>
         <div className="flex items-start my-6 gap-3 text-2xl font-semibold text-slate-800">
           <p>
-            {" "}
             {currency}
-            {product.price}{" "}
+            {product.price}
           </p>
           <p className="text-xl text-slate-500 line-through">
             {currency}
             {product.mrp}
           </p>
         </div>
-
-        {product.colors && product.colors.length > 0 && (
-          <div className="mb-6">
-            <h3 className="text-sm font-medium text-slate-600 mb-2">Color</h3>
-            <div className="flex items-center gap-2">
-              {product.colors.map((color) => (
-                <button
-                  key={color}
-                  onClick={() => setSelectedColor(color)}
-                  className={`size-8 rounded-full border-2 transition ${
-                    selectedColor === color
-                      ? "border-green-500 scale-110"
-                      : "border-slate-200"
-                  }`}
-                  style={{ backgroundColor: color }}
-                />
-              ))}
+        
+        {product.variants && product.variants.length > 0 && (
+          <>
+            <div className="mb-6">
+                <h3 className="text-sm font-medium text-slate-600 mb-2">Color</h3>
+                <div className="flex items-center gap-2">
+                {[...new Set(product.variants.map(v => v.color))].map((color) => (
+                    <button
+                    key={color}
+                    onClick={() => setSelectedColor(color)}
+                    className={`size-8 rounded-full border-2 transition ${
+                        selectedColor === color
+                        ? "border-green-500 scale-110"
+                        : "border-slate-200"
+                    }`}
+                    style={{ backgroundColor: color }}
+                    />
+                ))}
+                </div>
             </div>
-          </div>
+
+            <div className="mb-8">
+                <h3 className="text-sm font-medium text-slate-600 mb-2">Size</h3>
+                <div className="flex items-center gap-2">
+                {[...new Set(product.variants.map(v => v.size))].map((size) => (
+                    <button
+                    key={size}
+                    onClick={() => setSelectedSize(size)}
+                    className={`px-4 py-2 text-sm border rounded-md transition ${
+                        selectedSize === size
+                        ? "bg-slate-800 text-white border-slate-800"
+                        : "bg-white text-slate-700 border-slate-300"
+                    }`}
+                    >
+                    {size}
+                    </button>
+                ))}
+                </div>
+            </div>
+          </>
         )}
 
-        {product.sizes && product.sizes.length > 0 && (
-          <div className="mb-8">
-            <h3 className="text-sm font-medium text-slate-600 mb-2">Size</h3>
-            <div className="flex items-center gap-2">
-              {product.sizes.map((size) => (
-                <button
-                  key={size}
-                  onClick={() => setSelectedSize(size)}
-                  className={`px-4 py-2 text-sm border rounded-md transition ${
-                    selectedSize === size
-                      ? "bg-slate-800 text-white border-slate-800"
-                      : "bg-white text-slate-700 border-slate-300"
-                  }`}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
         <div className="flex items-center gap-2 text-slate-500">
           <TagIcon size={14} />
@@ -251,16 +257,13 @@ const ProductDetails = ({ product }) => {
         <hr className="border-gray-300 my-6" />
         <div className="flex flex-col gap-4 text-slate-500">
           <p className="flex gap-3">
-            {" "}
-            <EarthIcon className="text-slate-400" /> Free shipping worldwide{" "}
+            <EarthIcon className="text-slate-400" /> Free shipping worldwide
           </p>
           <p className="flex gap-3">
-            {" "}
-            <CreditCardIcon className="text-slate-400" /> 100% Secured Payment{" "}
+            <CreditCardIcon className="text-slate-400" /> 100% Secured Payment
           </p>
           <p className="flex gap-3">
-            {" "}
-            <UserIcon className="text-slate-400" /> Trusted by top brands{" "}
+            <UserIcon className="text-slate-400" /> Trusted by top brands
           </p>
         </div>
       </div>
