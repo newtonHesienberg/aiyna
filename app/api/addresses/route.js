@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import dbPromise from '@/app/src/db/models';
 import validateUser from '@/app/src/middleware/validateUser';
 import dbPromise from '@/app/src/db/models';
 import { Op } from 'sequelize';
@@ -6,6 +7,7 @@ import { Op } from 'sequelize';
 /**
  * @route   GET /api/addresses
  * @desc    Get all addresses for the authenticated user
+ * @access  Private
  */
 const getAddressesHandler = async (req) => {
     try {
