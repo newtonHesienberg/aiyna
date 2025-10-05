@@ -12,16 +12,16 @@ import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
-import { useAuth } from "../app/context/AuthContext";
+import { useAuth } from "@/app/context/AuthContext";
 import RatingModal from "./RatingModal";
 
 const ProductDetails = ({ product }) => {
+  const { currentUser } = useAuth();
   const productId = product.id;
   const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || "₹";
   const { cartItems } = useSelector((state) => state.cart);
   const dispatch = useDispatch();
   const router = useRouter();
-  const { currentUser } = useAuth();
 
   const [mainImage, setMainImage] = useState(product.images[0]);
   const [selectedColor, setSelectedColor] = useState(product.variants?.[0]?.color);
@@ -59,6 +59,14 @@ const ProductDetails = ({ product }) => {
   );
 
   const addToCartHandler = () => {
+    if (!currentUser) {
+        sessionStorage.setItem('pendingAction', JSON.stringify({
+            type: 'ADD_TO_CART',
+            payload: { productId, color: selectedColor, size: selectedSize }
+        }));
+        router.push(`/login?nextUrl=/product/${productId}`);
+        return;
+    }
     const promise = dispatch(addToCartAPI({ productId, color: selectedColor, size: selectedSize }));
     toast.promise(promise, {
         loading: 'Adding to cart...',

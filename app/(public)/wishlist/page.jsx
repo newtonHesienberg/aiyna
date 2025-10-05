@@ -3,8 +3,8 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import ProductCard from '@/components/ProductCard';
 import PageTitle from '@/components/PageTitle';
-import { addToCartAPI } from '@/lib/features/cart/cartSlice'; // 1. Import new cart action
-import { clearWishlist } from '@/lib/features/wishlist/wishlistSlice'; // 2. Import new wishlist action
+import { addToCartAPI } from '@/lib/features/cart/cartSlice';
+import { clearWishlistAPI } from '@/lib/features/wishlist/wishlistSlice';
 import toast from 'react-hot-toast';
 import { ShoppingCart } from 'lucide-react';
 
@@ -15,26 +15,32 @@ const WishlistPage = () => {
 
     const wishlistedProducts = allProducts.filter(product => wishlistedIds.includes(product.id));
 
-
-    // 3. Create the handler function
-    const handleAddAllToCart = () => {
+    const handleAddAllToCart = async () => {
         if (wishlistedProducts.length === 0) return;
-        // Dispatch actions to move items and clear wishlist
-        const addToCartPromise = wishlistedProducts.map(item => dispatch(addToCartAPI({
+        
+        const addToCartPromises = wishlistedProducts.map(item => dispatch(addToCartAPI({
             productId: item.id,
-            color: item.variants?.[0]?.color, // Default to the first color/size if available
+            color: item.variants?.[0]?.color,
             size: item.variants?.[0]?.size,
         })));
-        dispatch(clearWishlist());
 
-        toast.promise(
-            Promise.all(addToCartPromise),
-            {
-                loading: 'Adding items to cart...',
-                success: `${wishlistedProducts.length} items added to your cart!`,
-                error: 'Could not add all items. Please try again.',
-            }
-        );
+        try {
+            await toast.promise(
+                Promise.all(addToCartPromises),
+                {
+                    loading: 'Adding items to cart...',
+                    success: `${wishlistedProducts.length} items added to your cart!`,
+                    error: 'Could not add all items. Please try again.',
+                }
+            );
+            
+            // If all items are added successfully, then clear the wishlist
+            await dispatch(clearWishlistAPI()).unwrap();
+            toast.success('Wishlist cleared!');
+
+        } catch (error) {
+            // Error handling is managed by toast.promise
+        }
     };
 
     return (
@@ -45,7 +51,6 @@ const WishlistPage = () => {
                         heading="My Wishlist"
                         text={`${wishlistedProducts.length} items saved`}
                     />
-                    {/* 4. Add the "Add All to Cart" button */}
                     {wishlistedProducts.length > 0 && (
                         <button
                             onClick={handleAddAllToCart}

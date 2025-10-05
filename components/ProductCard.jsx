@@ -4,18 +4,30 @@ import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { toggleWishlist } from '../lib/features/wishlist/wishlistSlice'
+import { toggleWishlistAPI } from '@/lib/features/wishlist/wishlistSlice'
+import { useAuth } from '@/app/context/AuthContext'
+import { useRouter } from 'next/navigation'
 
 const ProductCard = ({ product }) => {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '$';
     const dispatch = useDispatch();
+    const router = useRouter();
+    const { currentUser } = useAuth();
     const { items: wishlistItems } = useSelector(state => state.wishlist);
     const isWishlisted = wishlistItems.includes(product.id);
 
     const handleWishlistToggle = (e) => {
-        e.preventDefault(); // Prevent navigating to product page
-        e.stopPropagation(); // Stop event bubbling
-        dispatch(toggleWishlist(product.id));
+        e.preventDefault();
+        e.stopPropagation();
+        if (!currentUser) {
+            sessionStorage.setItem('pendingAction', JSON.stringify({
+                type: 'TOGGLE_WISHLIST',
+                payload: product.id
+            }));
+            router.push(`/login?nextUrl=${window.location.pathname}${window.location.search}`);
+            return;
+        }
+        dispatch(toggleWishlistAPI(product.id));
     };
 
     const averageRating =
