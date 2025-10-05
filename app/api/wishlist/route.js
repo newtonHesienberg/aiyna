@@ -5,8 +5,8 @@ import validateUser from '@/app/src/middleware/validateUser';
 // Utility function to get or create a wishlist for a user
 const getOrCreateWishlist = async (db, userId) => {
     const [wishlist] = await db.Wishlist.findOrCreate({
-        where: { user_id: userId },
-        defaults: { user_id: userId }
+        where: { userId },
+        defaults: { userId }
     });
     return wishlist;
 };
@@ -22,7 +22,7 @@ const getWishlistHandler = async (req) => {
         const userId = req.user.uid;
 
         const wishlist = await db.Wishlist.findOne({
-            where: { user_id: userId },
+            where: { userId },
             include: [{
                 model: db.WishlistItem,
                 as: 'items',
@@ -66,12 +66,12 @@ const toggleWishlistHandler = async (req) => {
 
         const [wishlistItem, created] = await db.WishlistItem.findOrCreate({
             where: {
-                wishlist_id: wishlist.id,
-                product_id: productId
+                wishlistId: wishlist.id,
+                productId: productId
             },
             defaults: {
-                wishlist_id: wishlist.id,
-                product_id: productId
+                wishlistId: wishlist.id,
+                productId: productId
             }
         });
 
@@ -88,6 +88,30 @@ const toggleWishlistHandler = async (req) => {
     }
 };
 
+/**
+ * @route   DELETE /api/wishlist
+ * @desc    Clear all items from the user's wishlist
+ * @access  Private
+ */
+const clearWishlistHandler = async (req) => {
+    try {
+        const db = await dbPromise;
+        const userId = req.user.uid;
+
+        const wishlist = await db.Wishlist.findOne({ where: { userId } });
+
+        if (wishlist) {
+            await db.WishlistItem.destroy({ where: { wishlistId: wishlist.id } });
+        }
+
+        return NextResponse.json({ message: 'Wishlist cleared successfully.' });
+    } catch (error) {
+        console.error('Error clearing wishlist:', error);
+        return NextResponse.json({ error: 'Failed to clear wishlist.' }, { status: 500 });
+    }
+};
+
 // Wrap handlers with the validation middleware
 export const GET = validateUser(getWishlistHandler);
 export const POST = validateUser(toggleWishlistHandler);
+export const DELETE = validateUser(clearWishlistHandler);

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { auth } from '@/lib/firebase';
 import {
     signInWithEmailAndPassword,
@@ -20,11 +20,17 @@ export default function LoginPage() {
         password: '',
     });
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const nextUrl = searchParams.get('nextUrl');
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
+
+    const handleSuccess = () => {
+        router.push(nextUrl || '/');
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -59,7 +65,7 @@ export default function LoginPage() {
             toast.promise(signupAndLoginPromise(), {
                 loading: 'Creating your account...',
                 success: () => {
-                    router.push('/');
+                    handleSuccess();
                     return 'Account created and logged in successfully!';
                 },
                 error: (error) => error.message,
@@ -88,7 +94,7 @@ export default function LoginPage() {
             toast.promise(loginPromise, {
                 loading: 'Logging in...',
                 success: () => {
-                    router.push('/');
+                    handleSuccess();
                     return 'Logged in successfully!';
                 },
                 error: (error) => error.message,
@@ -130,7 +136,7 @@ export default function LoginPage() {
         toast.promise(googleSignInPromise(), {
             loading: 'Signing in with Google...',
             success: () => {
-                router.push('/');
+                handleSuccess();
                 return 'Logged in successfully!';
             },
             error: (err) => err.message || 'Failed to sign in with Google.',

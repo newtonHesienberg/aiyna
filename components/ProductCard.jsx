@@ -4,18 +4,30 @@ import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { toggleWishlist } from '@/lib/features/wishlist/wishlistSlice'
+import { toggleWishlistAPI } from '@/lib/features/wishlist/wishlistSlice'
+import { useAuth } from '@/app/context/AuthContext'
+import { useRouter } from 'next/navigation'
 
 const ProductCard = ({ product }) => {
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '$';
     const dispatch = useDispatch();
+    const router = useRouter();
+    const { currentUser } = useAuth();
     const { items: wishlistItems } = useSelector(state => state.wishlist);
     const isWishlisted = wishlistItems.includes(product.id);
 
     const handleWishlistToggle = (e) => {
-        e.preventDefault(); // Prevent navigating to product page
-        e.stopPropagation(); // Stop event bubbling
-        dispatch(toggleWishlist(product.id));
+        e.preventDefault();
+        e.stopPropagation();
+        if (!currentUser) {
+            sessionStorage.setItem('pendingAction', JSON.stringify({
+                type: 'TOGGLE_WISHLIST',
+                payload: product.id
+            }));
+            router.push(`/login?nextUrl=${window.location.pathname}${window.location.search}`);
+            return;
+        }
+        dispatch(toggleWishlistAPI(product.id));
     };
 
     const rating = Math.round(product?.rating?.reduce((acc, curr) => acc + curr.rating, 0) / product?.rating?.length);
@@ -24,7 +36,6 @@ const ProductCard = ({ product }) => {
         <Link href={`/product/${product.id}`} className='group max-xl:mx-auto'>
             <div className='relative bg-[#F5F5F5] h-52 sm:h-80 rounded-lg flex items-center justify-center'>
                 <Image width={500} height={500} className='max-h-40 sm:max-h-60 w-auto group-hover:scale-105 transition duration-300' src={product.images[0]} alt="" />
-                {/* Wishlist Button */}
                 <button
                     onClick={handleWishlistToggle}
                     className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md hover:scale-110 transition-transform"
