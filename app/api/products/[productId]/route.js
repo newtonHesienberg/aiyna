@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import dbPromise from '../../src/db/models';
+import dbPromise from '@/app/src/db/models';
 import { Op } from 'sequelize';
 
 /**

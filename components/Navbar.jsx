@@ -126,8 +126,8 @@ const Navbar = () => {
                             <Heart size={18} />
                             {wishlistCount > 0 && (
                                 <span className="absolute -top-1 -right-2 text-[10px] font-sans font-bold flex items-center justify-center text-white bg-indigo-500 size-4 rounded-full">
-                  {wishlistCount}
-                </span>
+                                    {wishlistCount}
+                                </span>
                             )}
                         </Link>
 
@@ -138,8 +138,8 @@ const Navbar = () => {
                             <ShoppingCart size={18} />
                             {cartCount > 0 && (
                                 <span className="absolute -top-1 -right-2 text-[10px] font-sans font-bold flex items-center justify-center text-white bg-slate-600 size-4 rounded-full">
-                  {cartCount}
-                </span>
+                                    {cartCount}
+                                </span>
                             )}
                         </Link>
 
@@ -150,7 +150,13 @@ const Navbar = () => {
                                 onMouseLeave={() => setProfileMenuOpen(false)}
                             >
                                 <Link href="/profile" className="p-2 text-slate-600 hover:text-indigo-600 transition-colors">
-                                    <User size={18} />
+                                    <Image
+                                        src={currentUser.photoURL || assets.generic_profile_image}
+                                        alt="Profile"
+                                        width={100}
+                                        height={100}
+                                        className="w-9 h-9 rounded-full"
+                                    />
                                 </Link>
                                 {isProfileMenuOpen && (
                                     <div className="absolute top-full right-0 mt-0 w-48 bg-white shadow-lg rounded-md py-2 z-50 border border-slate-100">

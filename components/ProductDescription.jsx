@@ -33,7 +33,7 @@ const ProductDescription = ({ product }) => {
 
                 {/* Tabs */}
                 <div className="flex border-b border-slate-200 mb-8 max-w-2xl">
-                    {['Description', `Reviews (${product.ratings?.length || 0})`].map((tab, index) => (
+                    {['Description', `Reviews (${product?.ratings?.length || 0})`, 'Seller Info'].map((tab, index) => (
                         <button className={`${tab.startsWith(selectedTab) ? 'border-b-2 border-indigo-600 font-semibold text-indigo-600' : 'text-slate-400'} px-4 py-2 font-medium transition-colors`} key={index} onClick={() => setSelectedTab(tab.split(' ')[0])}>
                             {tab}
                         </button>
@@ -77,6 +77,18 @@ const ProductDescription = ({ product }) => {
                         )) : (
                             <p>No reviews yet. Be the first to write one!</p>
                         )}
+                    </div>
+                )}
+                {/* Seller Info */}
+                {selectedTab === "Seller" && (
+                    <div className="flex items-center gap-4">
+                        <Image src={store.logo} alt={store.name} width={64} height={64} className="size-16 rounded-full" />
+                        <div>
+                            <p className="font-semibold text-slate-800">{store.name}</p>
+                            <Link href={`/shop/${store.username}`} className="text-indigo-600 text-sm flex items-center gap-1">
+                                Visit Store <ArrowRight size={14} />
+                            </Link>
+                        </div>
                     </div>
                 )}
             </div>

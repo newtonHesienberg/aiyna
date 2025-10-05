@@ -42,6 +42,7 @@ import anime_tshirt from "./anime_tshirt.jpg";
 import anime_tshirt_1 from "./anime_tshirt_1.jpg";
 import car_poster from "./car_poster.jpg";
 import office_poster from "./office_poster.jpg";
+import generic_profile_image from "./generic_profile_image.png";
 export const assets = {
   aiyna_logo,
   upload_area,
@@ -70,7 +71,8 @@ export const assets = {
   anime_tshirt,
   anime_tshirt_1,
   car_poster,
-  office_poster
+  office_poster,
+  generic_profile_image
 };
 
 // --- UPDATED HIERARCHICAL CATEGORY STRUCTURE WITH NEW PATHS ---

@@ -4,6 +4,9 @@ import { useAuth } from "@/app/context/AuthContext";
 import toast from "react-hot-toast";
 import DatePickerInput from "@/components/DatePickerInput";
 import Loading from "@/components/Loading";
+import Image from "next/image"; // Import Image
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage"; // Import Firebase Storage functions
+import { assets } from "@/assets/assets"
 
 export default function ProfilePage() {
     const { currentUser } = useAuth();
@@ -14,11 +17,11 @@ export default function ProfilePage() {
         email: "",
         mobileNumber: "",
         gender: "",
+        profileImage: "", // Add profile image to form data
     });
-
+    const [newImage, setNewImage] = useState(null); // State for the new image file
     const [isLoading, setIsLoading] = useState(true);
 
-    // This function was missing. It updates the form state as you type.
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prevData) => ({
@@ -30,7 +33,6 @@ export default function ProfilePage() {
     useEffect(() => {
         const loadProfile = async () => {
             if (currentUser) {
-                // 1. Try to load from session storage for an instant UI update
                 const cachedProfile = sessionStorage.getItem('userProfile');
                 if (cachedProfile) {
                     const userDetails = JSON.parse(cachedProfile);
@@ -40,12 +42,12 @@ export default function ProfilePage() {
                         email: userDetails.email || "",
                         mobileNumber: userDetails.mobile || "",
                         gender: userDetails.gender || "",
+                        profileImage: userDetails.profileImage || assets.generic_profile_image,
                     });
                     if (userDetails.dob) setDob(new Date(userDetails.dob));
-                    setIsLoading(false); // We have data to show, so stop loading
+                    setIsLoading(false);
                 }
 
-                // 2. Always fetch fresh data from the API in the background
                 try {
                     const idToken = await currentUser.getIdToken();
                     const response = await fetch(`/api/users/${currentUser.uid}`, {
@@ -56,13 +58,13 @@ export default function ProfilePage() {
                     
                     const freshUserDetails = await response.json();
 
-                    // 3. Update state and session storage with the latest data
                     setFormData({
                         firstName: freshUserDetails.firstName || "",
                         lastName: freshUserDetails.lastName || "",
                         email: freshUserDetails.email || "",
                         mobileNumber: freshUserDetails.mobile || "",
                         gender: freshUserDetails.gender || "",
+                        profileImage: freshUserDetails.profileImage || assets.generic_profile_image,
                     });
                     if (freshUserDetails.dob) setDob(new Date(freshUserDetails.dob));
                     
@@ -70,11 +72,11 @@ export default function ProfilePage() {
 
                 } catch (error) {
                     console.error("Failed to re-fetch user details:", error);
-                    if (!cachedProfile) { // Only show error if we have no data at all
+                    if (!cachedProfile) {
                         toast.error("Could not load your profile.");
                     }
                 } finally {
-                    setIsLoading(false); // Ensure loading is off after API call
+                    setIsLoading(false);
                 }
             }
         };
@@ -91,6 +93,14 @@ export default function ProfilePage() {
         }
         if (currentUser) {
             const savePromise = async () => {
+                let imageUrl = formData.profileImage;
+                if (newImage) {
+                    const storage = getStorage();
+                    const storageRef = ref(storage, `profile_images/${currentUser.uid}`);
+                    await uploadBytes(storageRef, newImage);
+                    imageUrl = await getDownloadURL(storageRef);
+                }
+
                 const idToken = await currentUser.getIdToken();
                 const payload = {
                     firstName: formData.firstName,
@@ -98,6 +108,7 @@ export default function ProfilePage() {
                     mobile: formData.mobileNumber,
                     dob: dob,
                     gender: formData.gender,
+                    profileImage: imageUrl,
                 };
                 
                 const response = await fetch(`/api/users/${currentUser.uid}`, {
@@ -116,8 +127,9 @@ export default function ProfilePage() {
                 
                 const { user: updatedUser } = await response.json();
                 
-                // On success, update session storage with the new data
                 sessionStorage.setItem('userProfile', JSON.stringify(updatedUser));
+                setFormData(prev => ({ ...prev, profileImage: imageUrl }));
+                setNewImage(null);
             };
 
             toast.promise(savePromise(), {
@@ -138,6 +150,17 @@ export default function ProfilePage() {
 
     return (
         <form onSubmit={handleSave}>
+            <div className="flex flex-col items-center mb-8">
+                <div className="relative">
+                    <Image 
+                        src={formData.profileImage || "/user-placeholder.png"}
+                        alt="Profile Picture"
+                        width={128}
+                        height={128}
+                        className="w-32 h-32 rounded-full object-cover border-4 border-slate-200"
+                    />
+                </div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="form-group">
                     <label className="block text-sm font-medium text-slate-600 mb-1" htmlFor="firstName">

@@ -14,17 +14,18 @@ const connectToPostgresDb = async () => {
         process.env.DB_NAME,
         process.env.DB_USERNAME,
         process.env.DB_PASSWORD,
-        {
+         {
             host: process.env.DB_HOST,
             dialect: 'postgres',
             port: process.env.DB_PORT,
-            dialectModule: require('pg'), // Explicitly require the 'pg' module
+            dialectModule: require('pg'),
             dialectOptions: {
                 ssl: {
                     require: true,
                     rejectUnauthorized: false
                 },
             },
+            logging: false, // This line disables query logging
         }
     );
 
