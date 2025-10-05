@@ -1,13 +1,49 @@
 "use client";
 import toast from "react-hot-toast";
 import ProfileSidebar from "@/components/ProfileSideBar";
+import { useAuth } from "@/app/context/AuthContext";
+import { useState } from "react";
 
 // Component for the main content of the feedback page
 function FeedbackContent() {
-    const handleSubmit = (e) => {
+    const { currentUser } = useAuth();
+    const [subject, setSubject] = useState('');
+    const [message, setMessage] = useState('');
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        toast.success("Thank you for your feedback!");
-        e.target.reset();
+        if (!currentUser) {
+            toast.error("You must be logged in to submit feedback.");
+            return;
+        }
+
+        const feedbackPromise = async () => {
+            const idToken = await currentUser.getIdToken();
+            const response = await fetch('/api/feedback', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${idToken}`,
+                },
+                body: JSON.stringify({ subject, message }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to submit feedback.');
+            }
+        };
+
+        await toast.promise(feedbackPromise(), {
+            loading: 'Submitting feedback...',
+            success: () => {
+                // Clear form on success
+                setSubject('');
+                setMessage('');
+                return 'Thank you for your feedback!';
+            },
+            error: (err) => err.message,
+        });
     };
 
     return (
@@ -18,13 +54,27 @@ function FeedbackContent() {
                     <label className="block text-sm font-medium text-slate-600 mb-1" htmlFor="feedbackSubject">
                         Subject
                     </label>
-                    <input type="text" id="feedbackSubject" className="w-full p-3 border border-slate-300 rounded-md" required />
+                    <input 
+                        type="text" 
+                        id="feedbackSubject" 
+                        className="w-full p-3 border border-slate-300 rounded-md" 
+                        value={subject}
+                        onChange={(e) => setSubject(e.target.value)}
+                        required 
+                    />
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-slate-600 mb-1" htmlFor="feedbackMessage">
                         Message
                     </label>
-                    <textarea id="feedbackMessage" className="w-full p-3 border border-slate-300 rounded-md" rows="5" required></textarea>
+                    <textarea 
+                        id="feedbackMessage" 
+                        className="w-full p-3 border border-slate-300 rounded-md" 
+                        rows="5" 
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        required
+                    ></textarea>
                 </div>
             </div>
             <div className="mt-6">
@@ -54,4 +104,3 @@ export default function FeedbackPage() {
         </div>
     );
 }
-
