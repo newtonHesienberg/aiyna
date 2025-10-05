@@ -8,12 +8,14 @@ import ThemedSections from "@/components/ThemedSections";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { fetchProducts } from "@/lib/features/product/productSlice";
+import { fetchCategories } from "@/lib/features/category/categorySlice";
 
 export default function Home() {
   const dispatch = useDispatch();
 
   useEffect(() => {
     dispatch(fetchProducts());
+    dispatch(fetchCategories());
   }, [dispatch]);
 
   return (

@@ -1,9 +1,11 @@
 'use client'
 import React from 'react';
-import { categoryData } from '@/assets/assets';
 import { CheckSquare, Square } from 'lucide-react';
+import { useSelector } from 'react-redux';
 
 const ShopSidebar = ({ allColors, allSizes, filters, setFilters, sort, setSort }) => {
+
+    const { list: categoryData } = useSelector((state) => state.category);
 
     // Handles adding/removing items from filter arrays (for multi-select)
     const handleMultiSelectChange = (type, value) => {
@@ -48,14 +50,14 @@ const ShopSidebar = ({ allColors, allSizes, filters, setFilters, sort, setSort }
             {/* --- NEW: Multi-Select Category Filters --- */}
             <div className="mb-6">
                 {categoryData.map(cat => (
-                    <div key={cat.name} className="mb-4">
+                    <div key={cat.id} className="mb-4">
                         <h3 className="text-sm font-medium text-slate-800 mb-2">{cat.name}</h3>
                         <div className="flex flex-col items-start gap-2 pl-2">
                             {cat.subCategories.map(sub => {
                                 const isChecked = filters.subCategories.includes(sub.name);
                                 return (
                                     <button
-                                        key={sub.name}
+                                        key={sub.id}
                                         onClick={() => handleMultiSelectChange('subCategories', sub.name)}
                                         className="flex items-center gap-2 text-sm text-slate-700 hover:text-indigo-600 transition"
                                     >

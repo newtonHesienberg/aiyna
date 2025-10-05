@@ -1,10 +1,10 @@
 "use client";
-import { ChevronDown, Search, Heart, ShoppingCart, LogOut, User } from "lucide-react";
+import { ChevronDown, Search, Heart, ShoppingCart, LogOut, User, Shirt, Image as ImageIcon, Coffee, GlassWater, Accessibility } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useSelector } from "react-redux";
-import { assets, categoryData } from "@/assets/assets";
+import { assets } from "@/assets/assets";
 import Image from "next/image";
 import { useAuth } from "@/app/context/AuthContext";
 import { auth } from "@/lib/firebase";
@@ -16,6 +16,7 @@ const Navbar = () => {
     const [search, setSearch] = useState("");
     const { cartItems } = useSelector((state) => state.cart);
     const { items: wishlistItems } = useSelector((state) => state.wishlist);
+    const { list: categoryData } = useSelector((state) => state.category);
     const { currentUser } = useAuth();
     const [isProfileMenuOpen, setProfileMenuOpen] = useState(false);
 
@@ -44,7 +45,19 @@ const Navbar = () => {
         { name: 'My Account', path: '/profile' },
         { name: 'My Orders', path: '/orders' },
         { name: 'Support', path: '#' },
-    ]
+    ];
+
+    const iconMap = {
+        'T-shirts': Shirt,
+        'Hoodies': Shirt,
+        'Oversized T-shirts': Accessibility,
+        'Crop Top': Shirt,
+        'Crop Tank': Shirt,
+        'Wall Posters': ImageIcon,
+        'Mugs': Coffee,
+        'Water Bottles': GlassWater,
+    };
+
 
     return (
         <nav className="relative bg-white">
@@ -64,8 +77,8 @@ const Navbar = () => {
                         <Link href="/">Home</Link>
 
                         {categoryData.map((category) => (
-                            <div key={category.name} className="relative group">
-                                <Link href={category.path} className="flex items-center gap-1">
+                            <div key={category.id} className="relative group">
+                                <Link href={`/shop?category=${category.name}`} className="flex items-center gap-1">
                                     {category.name}
                                     <ChevronDown
                                         size={16}
@@ -74,16 +87,19 @@ const Navbar = () => {
                                 </Link>
 
                                 <div className="absolute hidden group-hover:block w-64 bg-white shadow-lg rounded-md mt-0 py-2 z-50 border border-slate-100">
-                                    {category.subCategories.map((sub) => (
-                                        <Link
-                                            key={sub.name}
-                                            href={sub.path}
-                                            className="flex items-center gap-3 px-4 py-3 text-sm text-slate-600 hover:bg-slate-100"
-                                        >
-                                            <sub.icon size={16} className="text-slate-500" />
-                                            {sub.name}
-                                        </Link>
-                                    ))}
+                                    {category.subCategories.map((sub) => {
+                                        const Icon = iconMap[sub.name] || Shirt;
+                                        return (
+                                            <Link
+                                                key={sub.id}
+                                                href={`/shop?subCategory=${sub.name}`}
+                                                className="flex items-center gap-3 px-4 py-3 text-sm text-slate-600 hover:bg-slate-100"
+                                            >
+                                                <Icon size={16} className="text-slate-500" />
+                                                {sub.name}
+                                            </Link>
+                                        )
+                                    })}
                                 </div>
                             </div>
                         ))}
@@ -182,4 +198,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-
