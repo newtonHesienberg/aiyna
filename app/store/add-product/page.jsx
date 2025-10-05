@@ -3,10 +3,11 @@ import { assets } from "@/assets/assets"
 import Image from "next/image"
 import { useState } from "react"
 import { toast } from "react-hot-toast"
+import { useSelector } from "react-redux"
 
 export default function StoreAddProduct() {
-
-    const categories = ["Tops", "Dresses", "Jeans", "Jackets", "Accessories", "Footwear"]
+    const { list: categoriesFromDB } = useSelector(state => state.category);
+    const allSubcategories = categoriesFromDB.flatMap(cat => cat.subCategories);
 
     const [images, setImages] = useState({ 1: null, 2: null, 3: null, 4: null })
     const [productInfo, setProductInfo] = useState({
@@ -14,7 +15,7 @@ export default function StoreAddProduct() {
         description: "",
         mrp: 0,
         price: 0,
-        category: "",
+        subCategoryId: "",
     })
     const [loading, setLoading] = useState(false)
 
@@ -65,10 +66,10 @@ export default function StoreAddProduct() {
                 </label>
             </div>
 
-            <select onChange={e => setProductInfo({ ...productInfo, category: e.target.value })} value={productInfo.category} className="w-full max-w-sm p-2 px-4 my-6 outline-none border border-slate-200 rounded" required>
+            <select onChange={e => setProductInfo({ ...productInfo, subCategoryId: e.target.value })} value={productInfo.subCategoryId} className="w-full max-w-sm p-2 px-4 my-6 outline-none border border-slate-200 rounded" required>
                 <option value="">Select a category</option>
-                {categories.map((category) => (
-                    <option key={category} value={category}>{category}</option>
+                {allSubcategories.map((subCategory) => (
+                    <option key={subCategory.id} value={subCategory.id}>{subCategory.name}</option>
                 ))}
             </select>
 

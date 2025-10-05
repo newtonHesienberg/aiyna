@@ -5,45 +5,51 @@ import { MoveLeftIcon } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSelector } from "react-redux";
 import ShopSidebar from "@/components/ShopSidebar";
+import Loading from "@/components/Loading";
 
 // This component now contains all the logic and is the main export.
 function ShopPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const products = useSelector((state) => state.product.list);
+  const { list: products, loading: productsLoading } = useSelector((state) => state.product);
+  const { list: categoryData, loading: categoriesLoading } = useSelector((state) => state.category);
 
-  // Read initial filters from URL
-  const initialCategory = searchParams.get("category") || "";
-  const initialSubCategory = searchParams.get("subCategory") || "";
+  // State is now initialized from the URL search params on first load
+  const [sort, setSort] = useState(searchParams.get("sort") || "newest");
+  const [filters, setFilters] = useState({
+    price: parseInt(searchParams.get("price") || "500", 10),
+    color: searchParams.get("color") || "",
+    size: searchParams.get("size") || "",
+    categories: searchParams.getAll("category"),
+    subCategories: searchParams.getAll("subCategory"),
+  });
+
+  const [filteredProducts, setFilteredProducts] = useState(products);
   const search = searchParams.get("search") || "";
 
-  const [sort, setSort] = useState("newest");
-  const [filters, setFilters] = useState({
-    price: 500,
-    color: "",
-    size: "",
-    categories: initialCategory ? [initialCategory] : [],
-    subCategories: initialSubCategory ? [initialSubCategory] : [],
-  });
-  const [filteredProducts, setFilteredProducts] = useState(products);
-
-  const allColors = [...new Set(products.flatMap((p) => p.colors || []))];
-  const allSizes = [...new Set(products.flatMap((p) => p.sizes || []))];
-
-  // Effect to update filters if URL changes
+  const allColors = [...new Set(products.flatMap((p) => p.variants?.map(v => v.color)).filter(Boolean))];
+  const allSizes = [...new Set(products.flatMap((p) => p.variants?.map(v => v.size)).filter(Boolean))];
+  
+  // This effect syncs filter state changes TO the URL
   useEffect(() => {
-    const categoryFromUrl = searchParams.get("category");
-    const subCategoryFromUrl = searchParams.get("subCategory");
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
 
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      categories: categoryFromUrl ? [categoryFromUrl] : [],
-      subCategories: subCategoryFromUrl ? [subCategoryFromUrl] : [],
-    }));
-  }, [searchParams]);
+    filters.subCategories.forEach(sub => params.append('subCategory', sub));
+    filters.categories.forEach(cat => params.append('category', cat));
 
-  // Effect to apply filters and sorting
+    if (filters.color) params.set('color', filters.color);
+    if (filters.size) params.set('size', filters.size);
+    if (filters.price < 500) params.set('price', filters.price);
+    if (sort !== 'newest') params.set('sort', sort);
+
+    // Update URL without a full page reload. Using replace to avoid polluting browser history.
+    router.replace(`/shop?${params.toString()}`);
+  }, [filters, sort, search, router]);
+
+
+  // Effect to apply filters and sorting when data or filters change
   useEffect(() => {
     let tempProducts = [...products];
 
@@ -57,15 +63,18 @@ function ShopPage() {
       const priceMatch = product.price <= filters.price;
       const colorMatch =
         !filters.color ||
-        (product.colors && product.colors.includes(filters.color));
+        (product.variants && product.variants.some(v => v.color === filters.color));
       const sizeMatch =
         !filters.size ||
-        (product.sizes && product.sizes.includes(filters.size));
+        (product.variants && product.variants.some(v => v.size === filters.size));
+      
+      const categoryMatch = filters.categories.length === 0 || filters.categories.includes(product.subCategory?.category?.name);
+
       const subCategoryMatch =
         filters.subCategories.length === 0 ||
-        filters.subCategories.includes(product.category);
+        filters.subCategories.includes(product.subCategory?.name);
 
-      return priceMatch && colorMatch && sizeMatch && subCategoryMatch;
+      return priceMatch && colorMatch && sizeMatch && subCategoryMatch && categoryMatch;
     });
 
     if (sort === "newest") {
@@ -80,6 +89,10 @@ function ShopPage() {
 
     setFilteredProducts(tempProducts);
   }, [search, products, filters, sort]);
+  
+  if (productsLoading || categoriesLoading) {
+    return <Loading />;
+  }
 
   return (
     <div className="min-h-[70vh] mx-6">
@@ -87,6 +100,7 @@ function ShopPage() {
         <ShopSidebar
           allColors={allColors}
           allSizes={allSizes}
+          categoryData={categoryData}
           filters={filters}
           setFilters={setFilters}
           sort={sort}
@@ -124,7 +138,7 @@ function ShopPage() {
 // while using client-side hooks like useSearchParams.
 export default function Shop() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<Loading />}>
       <ShopPage />
     </Suspense>
   );

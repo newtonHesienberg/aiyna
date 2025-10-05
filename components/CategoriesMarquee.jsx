@@ -1,11 +1,16 @@
 'use client'
-import { categoryData } from "@/assets/assets";
 import Link from "next/link";
+import { useSelector } from "react-redux";
 
 const CategoriesMarquee = () => {
 
+    const { list: categoryData } = useSelector((state) => state.category);
+
     // Create a single flat array of all sub-categories from our main category data
-    const allSubCategories = categoryData.flatMap(category => category.subCategories);
+    const allSubCategories = categoryData.flatMap(category => category.subCategories.map(sub => ({
+        name: sub.name,
+        path: `/shop?subCategory=${sub.name}`
+    })));
 
     return (
         <div className="overflow-hidden w-full relative max-w-7xl mx-auto select-none group sm:my-20">
