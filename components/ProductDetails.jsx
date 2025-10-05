@@ -1,5 +1,5 @@
 "use client";
-import { addToCartAPI } from "@/lib/features/cart/cartSlice"; // Use the async thunk
+import { addToCartAPI } from "../lib/features/cart/cartSlice";
 import {
   StarIcon,
   TagIcon,
@@ -12,6 +12,8 @@ import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
+import { useAuth } from "../app/context/AuthContext";
+import RatingModal from "./RatingModal";
 
 const ProductDetails = ({ product }) => {
   const productId = product.id;
@@ -19,10 +21,12 @@ const ProductDetails = ({ product }) => {
   const { cartItems } = useSelector((state) => state.cart);
   const dispatch = useDispatch();
   const router = useRouter();
+  const { currentUser } = useAuth();
 
   const [mainImage, setMainImage] = useState(product.images[0]);
   const [selectedColor, setSelectedColor] = useState(product.variants?.[0]?.color);
   const [selectedSize, setSelectedSize] = useState(product.variants?.[0]?.size);
+  const [ratingModal, setRatingModal] = useState(null);
 
   const [showMagnifier, setShowMagnifier] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -69,8 +73,13 @@ const ProductDetails = ({ product }) => {
   };
 
   const averageRating =
-    product?.ratings?.reduce((acc, item) => acc + item?.rating, 0) /
-    product?.ratings?.length;
+    product?.ratings?.length > 0
+      ? product.ratings.reduce((acc, item) => acc + item.rating, 0) /
+        product.ratings.length
+      : 0;
+
+  const hasUserRated = product?.ratings?.some(rating => rating.userId === currentUser?.uid);
+
 
   return (
     <div className="flex max-lg:flex-col gap-12 relative">
@@ -145,13 +154,13 @@ const ProductDetails = ({ product }) => {
             .map((_, index) => (
               <StarIcon
                 key={index}
-                size={14}
+                size={16}
                 className="text-transparent mt-0.5"
-                fill={averageRating >= index + 1 ? "#00C950" : "#D1D5DB"}
+                fill={averageRating.toFixed(0) >= index + 1 ? "#f59e0b" : "#D1D5DB"}
               />
             ))}
           <p className="text-sm ml-3 text-slate-500">
-            {product?.ratings?.length} Reviews
+            ({product?.ratings?.length} Reviews)
           </p>
         </div>
         <div className="flex items-start my-6 gap-3 text-2xl font-semibold text-slate-800">
@@ -176,7 +185,7 @@ const ProductDetails = ({ product }) => {
                     onClick={() => setSelectedColor(color)}
                     className={`size-8 rounded-full border-2 transition ${
                         selectedColor === color
-                        ? "border-green-500 scale-110"
+                        ? "border-indigo-500 scale-110"
                         : "border-slate-200"
                     }`}
                     style={{ backgroundColor: color }}
@@ -255,6 +264,22 @@ const ProductDetails = ({ product }) => {
         </div>
 
         <hr className="border-gray-300 my-6" />
+        
+        {/* Add Review Button - For testing purposes */}
+        {process.env.NEXT_PUBLIC_ENABLE_OPEN_REVIEWS === 'true' && currentUser && (
+            <div className="my-6">
+                <button
+                    onClick={() => setRatingModal({ productId: product.id })}
+                    disabled={hasUserRated}
+                    className="w-full bg-slate-100 text-slate-700 font-semibold py-3 px-6 rounded-md hover:bg-slate-200 transition-colors disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed"
+                >
+                    {hasUserRated ? "You've already reviewed this product" : "Write a Review"}
+                </button>
+            </div>
+        )}
+        
+        {ratingModal && <RatingModal ratingModal={ratingModal} setRatingModal={setRatingModal} />}
+
         <div className="flex flex-col gap-4 text-slate-500">
           <p className="flex gap-3">
             <EarthIcon className="text-slate-400" /> Free shipping worldwide

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import dbPromise from '@/app/src/db/models';
+import dbPromise from '../../src/db/models';
+import { Op } from 'sequelize';
 
 /**
  * @route   GET /api/products/[productId]
@@ -16,7 +17,15 @@ export async function GET(req, { params }) {
                 { model: db.SubCategory, as: 'subCategory', include: [{ model: db.Category, as: 'category' }] },
                 { model: db.Spec, as: 'specs' },
                 { model: db.ProductVariant, as: 'variants' },
-                { model: db.Rating, as: 'ratings' }
+                { 
+                    model: db.Rating, 
+                    as: 'ratings',
+                    include: [{ 
+                        model: db.User, 
+                        as: 'user', 
+                        attributes: ['firstName', 'lastName', 'profileImage'] 
+                    }] 
+                }
             ]
         });
 
