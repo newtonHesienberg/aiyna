@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
-import dbPromise from '../../src/db/models';
-import validateUser from '../../src/middleware/validateUser';
+import dbPromise from '@/app/src/db/models';
+import validateUser from '@/app/src/middleware/validateUser';
+import { Op } from 'sequelize';
 
 /**
  * @route   POST /api/ratings
- * @desc    Create or update a rating for a product
+ * @desc    Create a new rating for a product
  * @access  Private
  */
-const postRatingHandler = async (req) => {
+const addRatingHandler = async (req) => {
     try {
         const db = await dbPromise;
         const userId = req.user.uid;
@@ -17,40 +18,74 @@ const postRatingHandler = async (req) => {
             return NextResponse.json({ error: 'Product ID and rating are required.' }, { status: 400 });
         }
 
-        if (rating < 1 || rating > 5) {
-            return NextResponse.json({ error: 'Rating must be between 1 and 5.' }, { status: 400 });
-        }
-
-        // Find if a rating already exists for this user and product
-        let existingRating = await db.Rating.findOne({
+        // Use findOrCreate to prevent duplicate reviews by the same user for the same product
+        const [newRating, created] = await db.Rating.findOrCreate({
             where: {
                 userId: userId,
                 productId: productId
-            }
-        });
-
-        let savedRating;
-        if (existingRating) {
-            // Update the existing rating
-            existingRating.rating = rating;
-            existingRating.reviewText = reviewText;
-            savedRating = await existingRating.save();
-        } else {
-            // Create a new rating if one doesn't exist
-            savedRating = await db.Rating.create({
+            },
+            defaults: {
                 userId,
                 productId,
                 rating,
                 reviewText
-            });
+            }
+        });
+
+        if (!created) {
+            return NextResponse.json({ error: 'You have already reviewed this product.' }, { status: 409 });
         }
 
-        return NextResponse.json(savedRating, { status: 201 });
+        return NextResponse.json(newRating, { status: 201 });
 
     } catch (error) {
-        console.error('Error creating/updating rating:', error);
-        return NextResponse.json({ error: 'Failed to submit rating.' }, { status: 500 });
+        console.error('Error creating rating:', error);
+        return NextResponse.json({ error: 'Failed to create rating.' }, { status: 500 });
     }
 };
 
-export const POST = validateUser(postRatingHandler);
+
+/**
+ * @route   PUT /api/ratings
+ * @desc    Update an existing rating for a product
+ * @access  Private
+ */
+const updateRatingHandler = async (req) => {
+    try {
+        const db = await dbPromise;
+        const userId = req.user.uid;
+        const { productId, rating, reviewText } = await req.json();
+
+        if (!productId || !rating) {
+            return NextResponse.json({ error: 'Product ID and rating are required.' }, { status: 400 });
+        }
+
+        const existingRating = await db.Rating.findOne({
+            where: {
+                userId: { [Op.eq]: userId },
+                productId: { [Op.eq]: productId }
+            }
+        });
+
+        if (!existingRating) {
+            return NextResponse.json({ error: 'Rating not found. You can only edit your own reviews.' }, { status: 404 });
+        }
+
+        // Update the fields
+        existingRating.rating = rating;
+        existingRating.reviewText = reviewText;
+
+        // Save the changes
+        await existingRating.save();
+
+        // **THE FIX**: Return the updated rating object as a JSON response
+        return NextResponse.json(existingRating, { status: 200 });
+
+    } catch (error) {
+        console.error('Error updating rating:', error);
+        return NextResponse.json({ error: 'Failed to update rating.' }, { status: 500 });
+    }
+};
+
+export const POST = validateUser(addRatingHandler);
+export const PUT = validateUser(updateRatingHandler);
