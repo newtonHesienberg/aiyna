@@ -51,7 +51,7 @@ const ProductDescription = ({ product }) => {
                     <div className="flex flex-col gap-8 mt-8 max-w-2xl">
                         {product.ratings && product.ratings.length > 0 ? product.ratings.map((item, index) => (
                             <div key={index} className="flex gap-4 border-b border-slate-100 pb-6">
-                                <Image src={item?.user?.profileImage || 'https://placehold.co/100x100/EFEFEF/31343C?text=User'} alt={item?.user?.firstName || 'User'} className="size-10 rounded-full" width={40} height={40} />
+                                <Image src={item?.user?.profileImage || assets.generic_profile_image || 'https://placehold.co/100x100/EFEFEF/31343C?text=User'} alt={item?.user?.firstName || 'User'} className="size-10 rounded-full" width={40} height={40} />
                                 <div className="flex-1">
                                     <div className="flex justify-between items-center">
                                         <div>

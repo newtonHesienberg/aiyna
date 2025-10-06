@@ -19,6 +19,12 @@ module.exports = (sequelize, DataTypes) => {
         otherKey: 'theme_section_id',
         as: 'themeSections'
       });
+      
+      // A SubCategory can have many Products
+      SubCategory.hasMany(models.Product, {
+        foreignKey: 'sub_category_id',
+        as: 'products'
+      });
     }
   }
   SubCategory.init({
