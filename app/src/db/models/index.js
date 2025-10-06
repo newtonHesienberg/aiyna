@@ -1,31 +1,44 @@
 'use strict';
 
 const Sequelize = require('sequelize');
-const { connectToPostgresDb } = require('@/app/config/config.js');
+const { connectToPostgresDb } = require('../../../config/config.js');
 
-let db = {};
+let dbPromise;
 
 async function initialize() {
-    // Only proceed if the db object hasn't been initialized
-    if (Object.keys(db).length > 0) return db;
-
     const sequelize = await connectToPostgresDb();
+    const db = {};
 
     try {
+        // --- EXPLICIT MODEL LOADING ---
+        // Add all your model files to this array.
         const models = [
-            require('./address'), require('./cart'), require('./cartitem'),
-            require('./category'), require('./coupon'), require('./feedback'),
-            require('./Order'), require('./OrderItem'), require('./Product'),
-            require('./productvariant'), require('./rating'), require('./spec'),
-            require('./subcategory'), require('./themesection'), require('./User'),
-            require('./wishlist'), require('./wishlistitem'),
+            require('./address'),
+            require('./cart'),
+            require('./cartitem'),
+            require('./category'),
+            require('./coupon'),
+            require('./feedback'),
+            require('./Order'),
+            require('./OrderItem'),
+            require('./Product'),
+            require('./productvariant'),
+            require('./rating'),
+            require('./spec'),
+            require('./subcategory'),
+            require('./themesection'),
+            require('./User'),
+            require('./wishlist'),
+            require('./wishlistitem'),
         ];
 
+        // Initialize each model and add it to the db object
         for (const modelDefiner of models) {
             const model = modelDefiner(sequelize, Sequelize.DataTypes);
             db[model.name] = model;
         }
 
+        // --- RUN ASSOCIATIONS ---
         Object.keys(db).forEach(modelName => {
             if (db[modelName].associate) {
                 db[modelName].associate(db);
@@ -36,22 +49,21 @@ async function initialize() {
         db.Sequelize = Sequelize;
 
     } catch (error) {
-        console.error('Unable to initialize the database models:', error);
+        console.error('Unable to initialize the database:', error);
         process.exit(1);
     }
 
     return db;
 }
 
-// In development, hot-reloading can cause issues. We use a global variable
-// to cache the promise so we don't re-initialize on every change.
-let dbPromise;
 if (process.env.NODE_ENV === 'development') {
+    // In development, use a global variable to preserve the promise across HMR reloads
     if (!global._dbPromise) {
         global._dbPromise = initialize();
     }
     dbPromise = global._dbPromise;
 } else {
+    // In production, initialize once
     dbPromise = initialize();
 }
 
