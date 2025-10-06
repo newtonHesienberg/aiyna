@@ -28,7 +28,6 @@ export default function ProfileLayout({ children }) {
         { name: "Profile", href: "/profile", icon: User },
         { name: "Orders", href: "/orders", icon: ShoppingBag },
         { name: "Addresses", href: "/addresses", icon: MapPin },
-        { name: "Payments", href: "/payments", icon: CreditCard },
         { name: "Support", href: "/support", icon: MessageSquare},
         { name: "Feedback", href: "/feedback", icon: MessageSquare },
     ];

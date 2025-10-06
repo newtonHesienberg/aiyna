@@ -30,7 +30,6 @@ export default function ProfileSidebar() {
         { name: "Profile", icon: User, href: "/profile" },
         { name: "Orders", icon: ShoppingBag, href: "/orders" },
         { name: "Addresses", icon: MapPin, href: "/addresses" },
-        { name: "Payment", icon: CreditCard, href: "/payments" },
         { name: "Support", icon: MessageSquare, href: "/support" },
         { name: "Feedback & Suggestion", icon: MessageSquare, href: "/feedback" },
     ];
