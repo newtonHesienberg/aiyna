@@ -1,50 +1,53 @@
-// file: app/config/config.js
 'use strict';
 
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-let sequelize;
+// Cache the Sequelize instance in a global variable to avoid re-creation
+// This is crucial for serverless environments like Vercel
+if (!global.sequelize) {
+  global.sequelize = new Sequelize(
+    process.env.DB_NAME,
+    process.env.DB_USERNAME,
+    process.env.DB_PASSWORD,
+    {
+      host: process.env.DB_HOST,
+      dialect: 'postgres',
+      port: process.env.DB_PORT,
+      dialectModule: require('pg'),
+      dialectOptions: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false,
+        },
+      },
+      logging: false,
+      pool: {
+        max: 5,
+        min: 0,
+        acquire: 30000,
+        idle: 10000,
+      },
+    }
+  );
+}
+
+const sequelize = global.sequelize;
 
 const connectToPostgresDb = async () => {
-    if (sequelize) {
-        return sequelize;
-    }
-
-    sequelize = new Sequelize(
-        process.env.DB_NAME,
-        process.env.DB_USERNAME,
-        process.env.DB_PASSWORD,
-        {
-            host: process.env.DB_HOST,
-            dialect: 'postgres',
-            port: process.env.DB_PORT,
-            dialectModule: require('pg'),
-            dialectOptions: {
-                ssl: {
-                    require: true,
-                    rejectUnauthorized: false
-                },
-            },
-            logging: false, // Disables query logging
-            // Add this pool configuration
-            pool: {
-                max: 5, // Maximum number of connection in pool
-                min: 0, // Minimum number of connection in pool
-                acquire: 30000, // The maximum time, in milliseconds, that pool will try to get connection before throwing error
-                idle: 10000 // The maximum time, in milliseconds, that a connection can be idle before being released
-            }
-        }
-    );
-
-    try {
+  try {
+    // We only need to authenticate once. We can add a flag to prevent re-authentication.
+    if (!global.isDbAuthenticated) {
         await sequelize.authenticate();
         console.log('Connection to postgres established successfully!');
-    } catch (err) {
-        console.error(`Unable to connect to postgres database: ${err}`);
+        global.isDbAuthenticated = true;
     }
-
-    return sequelize;
+  } catch (err) {
+    console.error(`Unable to connect to postgres database: ${err}`);
+    // Re-throw to indicate a failed connection attempt
+    throw err;
+  }
+  return sequelize;
 };
 
 module.exports = { connectToPostgresDb };
