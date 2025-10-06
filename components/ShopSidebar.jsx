@@ -1,19 +1,18 @@
 'use client'
 import React from 'react';
-import { CheckSquare, Square } from 'lucide-react';
+import { CheckSquare, Square, XIcon } from 'lucide-react'; // Import XIcon
 import { useSelector } from 'react-redux';
 
-const ShopSidebar = ({ allColors, allSizes, filters, setFilters, sort, setSort }) => {
+const ShopSidebar = ({ allColors, allSizes, filters, setFilters, sort, setSort, onClose }) => {
 
     const { list: categoryData } = useSelector((state) => state.category);
 
-    // Handles adding/removing items from filter arrays (for multi-select)
     const handleMultiSelectChange = (type, value) => {
         setFilters(prev => {
             const currentValues = prev[type] || [];
             const newValues = currentValues.includes(value)
-                ? currentValues.filter(item => item !== value) // Remove if already selected
-                : [...currentValues, value]; // Add if not selected
+                ? currentValues.filter(item => item !== value)
+                : [...currentValues, value];
             return { ...prev, [type]: newValues };
         });
     };
@@ -27,15 +26,23 @@ const ShopSidebar = ({ allColors, allSizes, filters, setFilters, sort, setSort }
             price: 500,
             color: '',
             size: '',
-            categories: [], // Changed to array
-            subCategories: [], // Changed to array
+            categories: [],
+            subCategories: [],
         });
         setSort('newest');
     };
 
     return (
-        <div className="w-full md:w-64 lg:w-72 pr-8">
-            <h2 className="text-xl font-semibold text-slate-800 mb-4">Filters</h2>
+        // Added padding for the scrollbar and close button on mobile
+        <div className="w-full h-full md:h-auto overflow-y-auto md:overflow-y-visible p-6 md:p-0 md:pr-8">
+            <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-slate-800">Filters</h2>
+                {/* Close button for mobile */}
+                <button onClick={onClose} className="md:hidden">
+                    <XIcon size={24} className="text-slate-600" />
+                </button>
+            </div>
+
 
             {/* Sort Dropdown */}
             <div className="mb-6">

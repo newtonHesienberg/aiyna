@@ -1,21 +1,22 @@
 "use client";
 import { Suspense, useEffect, useState } from "react";
 import ProductCard from "@/components/ProductCard";
-import { MoveLeftIcon } from "lucide-react";
+import { FilterIcon, MoveLeftIcon } from "lucide-react"; // Import FilterIcon
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSelector } from "react-redux";
 import ShopSidebar from "@/components/ShopSidebar";
 import Loading from "@/components/Loading";
 
-// This component now contains all the logic and is the main export.
 function ShopPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const { list: products, loading: productsLoading } = useSelector((state) => state.product);
   const { list: categoryData, loading: categoriesLoading } = useSelector((state) => state.category);
+  
+  // State to manage the visibility of the filter sidebar on mobile
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // State is now initialized from the URL search params on first load
   const [sort, setSort] = useState(searchParams.get("sort") || "newest");
   const [filters, setFilters] = useState({
     price: parseInt(searchParams.get("price") || "500", 10),
@@ -96,40 +97,52 @@ function ShopPage() {
 
   return (
     <div className="min-h-[70vh] mx-6">
-      <div className="max-w-7xl mx-auto my-10 flex flex-col md:flex-row gap-8">
-        <ShopSidebar
-          allColors={allColors}
-          allSizes={allSizes}
-          categoryData={categoryData}
-          filters={filters}
-          setFilters={setFilters}
-          sort={sort}
-          setSort={setSort}
-        />
-        <div className="flex-1">
-          <h1
-            onClick={() => router.push("/shop")}
-            className="text-2xl text-slate-500 mb-6 flex items-center gap-2 cursor-pointer"
-          >
-            {search && <MoveLeftIcon size={20} />} All{" "}
-            <span className="text-slate-700 font-medium">Products</span>
-          </h1>
-          {filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 xl:gap-8 mx-auto mb-32">
-              {filteredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
+        <div className="max-w-7xl mx-auto my-10 flex flex-col md:flex-row gap-8">
+            {/* Mobile Filter Drawer */}
+            <div className={`fixed inset-0 z-50 bg-black/20 backdrop-blur-sm md:hidden ${isFilterOpen ? 'block' : 'hidden'}`} onClick={() => setIsFilterOpen(false)}></div>
+            <div className={`fixed top-0 left-0 h-full w-72 bg-white z-50 transform ${isFilterOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform md:relative md:w-64 md:translate-x-0 md:bg-transparent md:h-auto`}>
+                <ShopSidebar
+                    allColors={allColors}
+                    allSizes={allSizes}
+                    filters={filters}
+                    setFilters={setFilters}
+                    sort={sort}
+                    setSort={setSort}
+                    onClose={() => setIsFilterOpen(false)} // Pass close function
+                />
             </div>
-          ) : (
-            <div className="text-center py-20">
-              <h2 className="text-xl text-slate-600">No products found</h2>
-              <p className="text-slate-500 mt-2">
-                Try adjusting your filters or search terms.
-              </p>
+            
+            <div className="flex-1">
+                <div className="flex justify-between items-center mb-6">
+                    <h1
+                        onClick={() => router.push("/shop")}
+                        className="text-2xl text-slate-500 flex items-center gap-2 cursor-pointer"
+                    >
+                        {search && <MoveLeftIcon size={20} />} All{" "}
+                        <span className="text-slate-700 font-medium">Products</span>
+                    </h1>
+                    {/* Mobile Filter Button */}
+                    <button onClick={() => setIsFilterOpen(true)} className="md:hidden flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-md">
+                        <FilterIcon size={16} />
+                        <span>Filters</span>
+                    </button>
+                </div>
+                {filteredProducts.length > 0 ? (
+                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 xl:gap-8 mx-auto mb-32">
+                        {filteredProducts.map((product) => (
+                            <ProductCard key={product.id} product={product} />
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center py-20">
+                        <h2 className="text-xl text-slate-600">No products found</h2>
+                        <p className="text-slate-500 mt-2">
+                            Try adjusting your filters or search terms.
+                        </p>
+                    </div>
+                )}
             </div>
-          )}
         </div>
-      </div>
     </div>
   );
 }
