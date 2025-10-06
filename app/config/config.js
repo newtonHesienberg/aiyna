@@ -1,21 +1,12 @@
-// file: app/config/config.js
 'use strict';
 
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-// A global variable to hold the single, cached Sequelize instance.
-// This is crucial for serverless environments to prevent creating new connection pools on every invocation.
-let sequelize;
-
-const connectToPostgresDb = () => {
-  // If the instance already exists, return it immediately.
-  if (sequelize) {
-    return sequelize;
-  }
-
-  // Otherwise, create a new instance and cache it in the global variable.
-  sequelize = new Sequelize(
+// Use a global variable to store the sequelize instance.
+// This is the key to preventing multiple connection pools in a serverless environment.
+if (!global.sequelize) {
+  global.sequelize = new Sequelize(
     process.env.DB_NAME,
     process.env.DB_USERNAME,
     process.env.DB_PASSWORD,
@@ -30,23 +21,21 @@ const connectToPostgresDb = () => {
           rejectUnauthorized: false,
         },
       },
-      logging: false, // Disables query logging for cleaner console output.
+      logging: false,
       pool: {
-        max: 5,         // Max connections per serverless instance.
+        max: 5,         // A low number is critical for serverless.
         min: 0,
-        acquire: 30000, // Max time (ms) to wait for a connection.
-        idle: 10000     // Max time (ms) a connection can be idle before being released.
+        acquire: 30000,
+        idle: 10000     // Close idle connections quickly.
       },
     }
   );
+}
 
-  console.log('Database connection object initialized.');
-  
-  // Authenticate the connection once
-  sequelize.authenticate()
-    .then(() => console.log('Connection to postgres established successfully!'))
-    .catch(err => console.error(`Unable to connect to postgres database: ${err}`));
-    
+const sequelize = global.sequelize;
+
+const connectToPostgresDb = () => {
+  // Return the single, cached instance.
   return sequelize;
 };
 

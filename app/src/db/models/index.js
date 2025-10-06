@@ -6,13 +6,11 @@ const { connectToPostgresDb } = require('@/app/config/config.js');
 const sequelize = connectToPostgresDb();
 const db = {};
 
-// Explicitly require all models to ensure they are loaded correctly.
-// Each require statement imports the initialized model class.
+// Explicitly require all model classes.
 const models = [
     require('./address'),
     require('./cart'),
     require('./cartitem'),
-    require('./subcategory'),
     require('./category'),
     require('./coupon'),
     require('./feedback'),
@@ -22,13 +20,14 @@ const models = [
     require('./productvariant'),
     require('./rating'),
     require('./spec'),
+    require('./subcategory'),
     require('./themesection'),
     require('./User'),
     require('./wishlist'),
     require('./wishlistitem'),
 ];
 
-// Add each model class to the db object.
+// Correctly add each imported model class to the db object.
 for (const model of models) {
     db[model.name] = model;
 }
@@ -44,4 +43,3 @@ db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
 module.exports = db;
-
