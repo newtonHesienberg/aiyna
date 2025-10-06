@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
-import dbPromise from '@/app/src/db/models';
 import validateUser from '@/app/src/middleware/validateUser';
-import { Op } from 'sequelize';
+import Cart from '@/app/src/db/models/cart';
+import CartItem from '@/app/src/db/models/cartitem';
+import Product from '@/app/src/db/models/Product';
 
 // Utility function to get or create a cart for a user
-const getOrCreateCart = async (db, userId) => {
-    const [cart] = await db.Cart.findOrCreate({
+const getOrCreateCart = async (userId) => {
+    const [cart] = await Cart.findOrCreate({
         where: { userId },
         defaults: { userId }
     });
@@ -19,16 +20,16 @@ const getOrCreateCart = async (db, userId) => {
  */
 const getCartHandler = async (req) => {
     try {
-        const db = await dbPromise;
+        
         const userId = req.user.uid;
 
-        const cart = await db.Cart.findOne({
-            where: { user_id: userId },
+        const cart = await Cart.findOne({
+            where: { userId },
             include: [{
-                model: db.CartItem,
+                model: CartItem,
                 as: 'items',
                 include: [{
-                    model: db.Product,
+                    model: Product,
                     as: 'product'
                 }]
             }]
@@ -52,7 +53,7 @@ const getCartHandler = async (req) => {
  */
 const addToCartHandler = async (req) => {
     try {
-        const db = await dbPromise;
+        
         const userId = req.user.uid;
         const { productId, color, size, quantity = 1 } = await req.json();
 
@@ -60,7 +61,7 @@ const addToCartHandler = async (req) => {
             return NextResponse.json({ error: 'Product ID is required.' }, { status: 400 });
         }
 
-        const cart = await getOrCreateCart(db, userId);
+        const cart = await getOrCreateCart(userId);
 
         const whereClause = {
             cartId: cart.id,
@@ -70,7 +71,7 @@ const addToCartHandler = async (req) => {
             size: size || null
         };
         
-        let cartItem = await db.CartItem.findOne({ where: whereClause });
+        let cartItem = await CartItem.findOne({ where: whereClause });
 
         if (cartItem) {
             // If item exists, update its quantity
@@ -78,15 +79,15 @@ const addToCartHandler = async (req) => {
             await cartItem.save();
         } else {
             // If item does not exist, create it
-            cartItem = await db.CartItem.create({
+            cartItem = await CartItem.create({
                 ...whereClause,
                 quantity: quantity,
             });
         }
         
         // Refetch with product to return full details
-        const itemWithProduct = await db.CartItem.findByPk(cartItem.id, {
-            include: [{model: db.Product, as: 'product'}]
+        const itemWithProduct = await CartItem.findByPk(cartItem.id, {
+            include: [{model: Product, as: 'product'}]
         });
 
         return NextResponse.json(itemWithProduct, { status: 200 });
@@ -104,7 +105,7 @@ const addToCartHandler = async (req) => {
  */
 const updateCartItemHandler = async (req) => {
     try {
-        const db = await dbPromise;
+        
         const userId = req.user.uid;
         const { cartItemId, quantity } = await req.json();
 
@@ -112,12 +113,12 @@ const updateCartItemHandler = async (req) => {
             return NextResponse.json({ error: 'Cart Item ID and quantity are required.' }, { status: 400 });
         }
         
-        const cart = await db.Cart.findOne({ where: { user_id: userId } });
+        const cart = await Cart.findOne({ where: { userId } });
         if (!cart) {
             return NextResponse.json({ error: 'Cart not found.' }, { status: 404 });
         }
 
-        const cartItem = await db.CartItem.findOne({
+        const cartItem = await CartItem.findOne({
             where: {
                 id: cartItemId,
                 cart_id: cart.id
@@ -135,8 +136,8 @@ const updateCartItemHandler = async (req) => {
             cartItem.quantity = quantity;
             await cartItem.save();
              // Refetch with product to return full details
-            const itemWithProduct = await db.CartItem.findByPk(cartItem.id, {
-                include: [{model: db.Product, as: 'product'}]
+            const itemWithProduct = await CartItem.findByPk(cartItem.id, {
+                include: [{model: Product, as: 'product'}]
             });
             return NextResponse.json(itemWithProduct);
         }
@@ -154,7 +155,7 @@ const updateCartItemHandler = async (req) => {
  */
 const deleteFromCartHandler = async (req) => {
      try {
-        const db = await dbPromise;
+        
         const userId = req.user.uid;
         const { searchParams } = new URL(req.url);
         const cartItemId = searchParams.get('cartItemId');
@@ -163,12 +164,12 @@ const deleteFromCartHandler = async (req) => {
             return NextResponse.json({ error: 'Cart Item ID is required.' }, { status: 400 });
         }
 
-        const cart = await db.Cart.findOne({ where: { user_id: userId } });
+        const cart = await Cart.findOne({ where: { userId } });
         if (!cart) {
             return NextResponse.json({ error: 'Cart not found.' }, { status: 404 });
         }
 
-        const cartItem = await db.CartItem.findOne({
+        const cartItem = await CartItem.findOne({
             where: {
                 id: cartItemId,
                 cart_id: cart.id

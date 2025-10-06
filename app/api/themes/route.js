@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
-import dbPromise from '@/app/src/db/models';
+import ThemeSection from '@/app/src/db/models/themesection';
+import SubCategory from '@/app/src/db/models/subcategory';
+import Product from '@/app/src/db/models/Product';
+import Rating from '@/app/src/db/models/rating';
 
 /**
  * @route   GET /api/themes
@@ -8,22 +11,22 @@ import dbPromise from '@/app/src/db/models';
  */
 export async function GET(req) {
     try {
-        const db = await dbPromise;
-        const themeSections = await db.ThemeSection.findAll({
+        
+        const themeSections = await ThemeSection.findAll({
             where: { isActive: true },
             include: [
                 {
-                    model: db.SubCategory,
+                    model: SubCategory,
                     as: 'subCategories',
                     include: [
                         {
-                            model: db.Product,
+                            model: Product,
                             as: 'products',
                             limit: 4, // Limit to 4 products per sub-category for the theme view
                             order: [['created_at', 'DESC']],
                             include: [ // Include ratings for product cards
                                 {
-                                    model: db.Rating,
+                                    model: Rating,
                                     as: 'ratings',
                                     attributes: ['rating']
                                 }

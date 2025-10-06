@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import dbPromise from '@/app/src/db/models';
 import validateUser from '@/app/src/middleware/validateUser';
+import Feedback from '@/app/src/db/models/feedback';
 
 /**
  * @route   POST /api/feedback
@@ -18,8 +18,8 @@ const postFeedbackHandler = async (req) => {
             return NextResponse.json({ error: 'The message field is required.' }, { status: 400 });
         }
 
-        const db = await dbPromise;
-        const newFeedback = await db.Feedback.create({
+        
+        const newFeedback = await Feedback.create({
             userId,
             subject,
             message,

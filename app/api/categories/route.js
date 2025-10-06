@@ -1,5 +1,6 @@
+import Category from '@/app/src/db/models/category';
+import SubCategory from '@/app/src/db/models/subcategory';
 import { NextResponse } from 'next/server';
-import dbPromise from '@/app/src/db/models';
 
 /**
  * @route   GET /api/categories
@@ -8,15 +9,15 @@ import dbPromise from '@/app/src/db/models';
  */
 export async function GET(req) {
     try {
-        const db = await dbPromise;
-        const categories = await db.Category.findAll({
+        
+        const categories = await Category.findAll({
             include: [{
-                model: db.SubCategory,
+                model: SubCategory,
                 as: 'subCategories'
             }],
             order: [
                 ['name', 'ASC'],
-                [{ model: db.SubCategory, as: 'subCategories' }, 'name', 'ASC'],
+                [{ model: SubCategory, as: 'subCategories' }, 'name', 'ASC'],
             ],
         });
 

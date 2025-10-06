@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import dbPromise from '@/app/src/db/models';
 import validateUser from '@/app/src/middleware/validateUser';
 import { Op } from 'sequelize';
+import Rating from '@/app/src/db/models/rating';
 
 /**
  * @route   POST /api/ratings
@@ -10,7 +11,7 @@ import { Op } from 'sequelize';
  */
 const addRatingHandler = async (req) => {
     try {
-        const db = await dbPromise;
+        
         const userId = req.user.uid;
         const { productId, rating, reviewText } = await req.json();
 
@@ -19,7 +20,7 @@ const addRatingHandler = async (req) => {
         }
 
         // Use findOrCreate to prevent duplicate reviews by the same user for the same product
-        const [newRating, created] = await db.Rating.findOrCreate({
+        const [newRating, created] = await Rating.findOrCreate({
             where: {
                 userId: userId,
                 productId: productId
@@ -52,7 +53,7 @@ const addRatingHandler = async (req) => {
  */
 const updateRatingHandler = async (req) => {
     try {
-        const db = await dbPromise;
+        
         const userId = req.user.uid;
         const { productId, rating, reviewText } = await req.json();
 
@@ -60,7 +61,7 @@ const updateRatingHandler = async (req) => {
             return NextResponse.json({ error: 'Product ID and rating are required.' }, { status: 400 });
         }
 
-        const existingRating = await db.Rating.findOne({
+        const existingRating = await Rating.findOne({
             where: {
                 userId: { [Op.eq]: userId },
                 productId: { [Op.eq]: productId }

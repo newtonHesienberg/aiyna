@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import dbPromise from '@/app/src/db/models';
 import validateUser from '@/app/src/middleware/validateUser';
+import Wishlist from '@/app/src/db/models/wishlist';
+import WishlistItem from '@/app/src/db/models/wishlistitem';
+import Product from '@/app/src/db/models/Product';
 
 // Utility function to get or create a wishlist for a user
-const getOrCreateWishlist = async (db, userId) => {
-    const [wishlist] = await db.Wishlist.findOrCreate({
+const getOrCreateWishlist = async (userId) => {
+    const [wishlist] = await Wishlist.findOrCreate({
         where: { userId },
         defaults: { userId }
     });
@@ -18,16 +21,16 @@ const getOrCreateWishlist = async (db, userId) => {
  */
 const getWishlistHandler = async (req) => {
     try {
-        const db = await dbPromise;
+        
         const userId = req.user.uid;
 
-        const wishlist = await db.Wishlist.findOne({
+        const wishlist = await Wishlist.findOne({
             where: { userId },
             include: [{
-                model: db.WishlistItem,
+                model: WishlistItem,
                 as: 'items',
                 include: [{
-                    model: db.Product,
+                    model: Product,
                     as: 'product'
                 }]
             }]
@@ -54,7 +57,7 @@ const getWishlistHandler = async (req) => {
  */
 const toggleWishlistHandler = async (req) => {
     try {
-        const db = await dbPromise;
+        
         const userId = req.user.uid;
         const { productId } = await req.json();
 
@@ -62,9 +65,9 @@ const toggleWishlistHandler = async (req) => {
             return NextResponse.json({ error: 'Product ID is required.' }, { status: 400 });
         }
 
-        const wishlist = await getOrCreateWishlist(db, userId);
+        const wishlist = await getOrCreateWishlist(userId);
 
-        const [wishlistItem, created] = await db.WishlistItem.findOrCreate({
+        const [wishlistItem, created] = await WishlistItem.findOrCreate({
             where: {
                 wishlistId: wishlist.id,
                 productId: productId
@@ -95,13 +98,13 @@ const toggleWishlistHandler = async (req) => {
  */
 const clearWishlistHandler = async (req) => {
     try {
-        const db = await dbPromise;
+        
         const userId = req.user.uid;
 
-        const wishlist = await db.Wishlist.findOne({ where: { userId } });
+        const wishlist = await Wishlist.findOne({ where: { userId } });
 
         if (wishlist) {
-            await db.WishlistItem.destroy({ where: { wishlistId: wishlist.id } });
+            await WishlistItem.destroy({ where: { wishlistId: wishlist.id } });
         }
 
         return NextResponse.json({ message: 'Wishlist cleared successfully.' });
