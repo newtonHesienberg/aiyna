@@ -1,70 +1,47 @@
 'use strict';
 
 const Sequelize = require('sequelize');
-const { connectToPostgresDb } = require('../../../config/config.js');
+const { connectToPostgresDb } = require('@/app/config/config.js');
 
-let dbPromise;
+const sequelize = connectToPostgresDb();
+const db = {};
 
-async function initialize() {
-    const sequelize = await connectToPostgresDb();
-    const db = {};
+// Explicitly require all models to ensure they are loaded correctly.
+// Each require statement imports the initialized model class.
+const models = [
+    require('./address'),
+    require('./cart'),
+    require('./cartitem'),
+    require('./subcategory'),
+    require('./category'),
+    require('./coupon'),
+    require('./feedback'),
+    require('./Order'),
+    require('./OrderItem'),
+    require('./Product'),
+    require('./productvariant'),
+    require('./rating'),
+    require('./spec'),
+    require('./themesection'),
+    require('./User'),
+    require('./wishlist'),
+    require('./wishlistitem'),
+];
 
-    try {
-        // --- EXPLICIT MODEL LOADING ---
-        // Add all your model files to this array.
-        const models = [
-            require('./address'),
-            require('./cart'),
-            require('./cartitem'),
-            require('./category'),
-            require('./coupon'),
-            require('./feedback'),
-            require('./Order'),
-            require('./OrderItem'),
-            require('./Product'),
-            require('./productvariant'),
-            require('./rating'),
-            require('./spec'),
-            require('./subcategory'),
-            require('./themesection'),
-            require('./User'),
-            require('./wishlist'),
-            require('./wishlistitem'),
-        ];
-
-        // Initialize each model and add it to the db object
-        for (const modelDefiner of models) {
-            const model = modelDefiner(sequelize, Sequelize.DataTypes);
-            db[model.name] = model;
-        }
-
-        // --- RUN ASSOCIATIONS ---
-        Object.keys(db).forEach(modelName => {
-            if (db[modelName].associate) {
-                db[modelName].associate(db);
-            }
-        });
-
-        db.sequelize = sequelize;
-        db.Sequelize = Sequelize;
-
-    } catch (error) {
-        console.error('Unable to initialize the database:', error);
-        process.exit(1);
-    }
-
-    return db;
+// Add each model class to the db object.
+for (const model of models) {
+    db[model.name] = model;
 }
 
-if (process.env.NODE_ENV === 'development') {
-    // In development, use a global variable to preserve the promise across HMR reloads
-    if (!global._dbPromise) {
-        global._dbPromise = initialize();
+// Run the `associate` method for each model to build the relationships.
+Object.keys(db).forEach(modelName => {
+    if (db[modelName].associate) {
+        db[modelName].associate(db);
     }
-    dbPromise = global._dbPromise;
-} else {
-    // In production, initialize once
-    dbPromise = initialize();
-}
+});
 
-module.exports = dbPromise;
+db.sequelize = sequelize;
+db.Sequelize = Sequelize;
+
+module.exports = db;
+

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import dbPromise from '@/app/src/db/models';
 import validateUser from '@/app/src/middleware/validateUser';
 import { Op } from 'sequelize';
+import Address from '@/app/src/db/models/address';
 
 /**
  * @route   GET /api/addresses
@@ -10,8 +10,8 @@ import { Op } from 'sequelize';
  */
 const getAddressesHandler = async (req) => {
     try {
-        const db = await dbPromise;
-        const addresses = await db.Address.findAll({
+        
+        const addresses = await Address.findAll({
             where: {
                 userId: {
                     [Op.eq]: req.user.uid
@@ -30,7 +30,7 @@ const getAddressesHandler = async (req) => {
  */
 const postAddressesHandler = async (req) => {
     try {
-        const db = await dbPromise;
+        
         const body = await req.json();
 
         // Validate required fields
@@ -39,7 +39,7 @@ const postAddressesHandler = async (req) => {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
         
-        const newAddress = await db.Address.create({
+        const newAddress = await Address.create({
             userId: req.user.uid,
             name,
             street,

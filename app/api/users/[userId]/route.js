@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server';
 import dbPromise from '@/app/src/db/models';
 import { Op } from 'sequelize';
 import validateUser from '@/app/src/middleware/validateUser';
+import User from '@/app/src/db/models/User';
 
 const getUserHandler = async (request, { params }) => {
     try {
-        const db = await dbPromise;
+        
         const {userId}  = await params;
-        const user = await db.User.findOne({
+        const user = await User.findOne({
             where: {
                 id: {
                     [Op.eq]: userId
@@ -27,11 +28,11 @@ const getUserHandler = async (request, { params }) => {
 
 const updateUserHandler = async (request, { params }) => {
     try {
-        const db = await dbPromise;
+        
         const { userId } = await params;
         const body = await request.json();
 
-        const user = await db.User.findOne({
+        const user = await User.findOne({
             where: {
                 id: {
                     [Op.eq]: userId

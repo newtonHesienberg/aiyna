@@ -1,6 +1,13 @@
 import { NextResponse } from 'next/server';
-import dbPromise from '@/app/src/db/models';
-import { Op } from 'sequelize';
+import Product from '@/app/src/db/models/Product';
+import SubCategory from '@/app/src/db/models/subcategory';
+import Category from '@/app/src/db/models/category';
+import Spec from '@/app/src/db/models/spec';
+import ProductVariant from '@/app/src/db/models/productvariant';
+import Rating from '@/app/src/db/models/rating';
+import User from '@/app/src/db/models/User';
+const db = require('@/app/src/db/models');
+
 
 /**
  * @route   GET /api/products/[productId]
@@ -9,19 +16,19 @@ import { Op } from 'sequelize';
  */
 export async function GET(req, { params }) {
     try {
-        const db = await dbPromise;
+        
         const { productId } = await params;
 
-        const product = await db.Product.findByPk(productId, {
+        const product = await Product.findByPk(productId, {
             include: [
-                { model: db.SubCategory, as: 'subCategory', include: [{ model: db.Category, as: 'category' }] },
-                { model: db.Spec, as: 'specs' },
-                { model: db.ProductVariant, as: 'variants' },
+                { model: SubCategory, as: 'subCategory', include: [{ model: Category, as: 'category' }] },
+                { model: Spec, as: 'specs' },
+                { model: ProductVariant, as: 'variants' },
                 { 
-                    model: db.Rating, 
+                    model: Rating, 
                     as: 'ratings',
                     include: [{ 
-                        model: db.User, 
+                        model: User, 
                         as: 'user', 
                         attributes: ['firstName', 'lastName', 'profileImage'] 
                     }] 
@@ -46,14 +53,14 @@ export async function GET(req, { params }) {
  * @access  Private (should be admin-only)
  */
 export async function PUT(req, { params }) {
-    const db = await dbPromise;
+    
     const { productId } = await params;
     const transaction = await db.sequelize.transaction();
 
     try {
         const { product: productData, specs, variants } = await req.json();
 
-        const product = await db.Product.findByPk(productId);
+        const product = await Product.findByPk(productId);
         if (!product) {
             await transaction.rollback();
             return NextResponse.json({ error: 'Product not found.' }, { status: 404 });
@@ -63,27 +70,27 @@ export async function PUT(req, { params }) {
         await product.update(productData, { transaction });
 
         // 2. Replace specs
-        await db.Spec.destroy({ where: { product_id: productId }, transaction });
+        await Spec.destroy({ where: { product_id: productId }, transaction });
         if (specs && specs.length > 0) {
             const specData = specs.map(spec => ({ ...spec, product_id: productId }));
-            await db.Spec.bulkCreate(specData, { transaction });
+            await Spec.bulkCreate(specData, { transaction });
         }
 
         // 3. Replace variants
-        await db.ProductVariant.destroy({ where: { product_id: productId }, transaction });
+        await ProductVariant.destroy({ where: { product_id: productId }, transaction });
         if (variants && variants.length > 0) {
             const variantData = variants.map(variant => ({ ...variant, product_id: productId }));
-            await db.ProductVariant.bulkCreate(variantData, { transaction });
+            await ProductVariant.bulkCreate(variantData, { transaction });
         }
         
         await transaction.commit();
 
         // Refetch the updated product with all its associations
-        const updatedProduct = await db.Product.findByPk(productId, {
+        const updatedProduct = await Product.findByPk(productId, {
             include: [
-                { model: db.SubCategory, as: 'subCategory', include: [{ model: db.Category, as: 'category' }] },
-                { model: db.Spec, as: 'specs' },
-                { model: db.ProductVariant, as: 'variants' }
+                { model: SubCategory, as: 'subCategory', include: [{ model: Category, as: 'category' }] },
+                { model: Spec, as: 'specs' },
+                { model: ProductVariant, as: 'variants' }
             ]
         });
 
@@ -103,10 +110,10 @@ export async function PUT(req, { params }) {
  */
 export async function DELETE(req, { params }) {
     try {
-        const db = await dbPromise;
+        
         const { productId } = await params;
 
-        const product = await db.Product.findByPk(productId);
+        const product = await Product.findByPk(productId);
         if (!product) {
             return NextResponse.json({ error: 'Product not found.' }, { status: 404 });
         }

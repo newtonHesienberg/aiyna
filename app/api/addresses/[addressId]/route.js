@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
-import dbPromise from '@/app/src/db/models';
 import { Op } from 'sequelize';
 import validateUser from '@/app/src/middleware/validateUser';
+import Address from '@/app/src/db/models/address';
 
 const getAddressHandler = async (request, { params }) => {
     try {
-        const db = await dbPromise;
-        const { addressId } = params;
+        
+        const { addressId } = await params;
 
-        const address = await db.Address.findOne({
+        const address = await Address.findOne({
             where: {
                 id: {
                     [Op.eq]: addressId
@@ -31,11 +31,11 @@ const getAddressHandler = async (request, { params }) => {
 
 const updateAddressHandler = async (request, { params }) => {
     try {
-        const db = await dbPromise;
-        const { addressId } = params;
+        
+        const { addressId } = await params;
         const body = await request.json();
 
-        const address = await db.Address.findOne({
+        const address = await Address.findOne({
             where: {
                 id: {
                     [Op.eq]: addressId
@@ -61,10 +61,10 @@ const updateAddressHandler = async (request, { params }) => {
 
 const deleteAddressHandler = async (request, { params }) => {
     try {
-        const db = await dbPromise;
-        const { addressId } = params;
+        
+        const { addressId } = await params;
 
-        const address = await db.Address.findOne({
+        const address = await Address.findOne({
             where: {
                 id: {
                     [Op.eq]: addressId

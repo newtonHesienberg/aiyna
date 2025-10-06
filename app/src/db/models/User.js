@@ -1,111 +1,36 @@
-"use strict";
-const { Model } = require("sequelize");
+'use strict';
+const { Model, DataTypes } = require('sequelize');
+const sequelize = require('@/app/config/config.js').connectToPostgresDb();
 
-module.exports = (sequelize, DataTypes) => {
-  class User extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
-    static associate(models) {
-      // define association here
-      // Example: User.hasMany(models.Post);
-      // A User can have many Addresses
-      User.hasMany(models.Address, {
-        foreignKey: "id",
-        as: "addresses",
-      });
-
-      User.hasMany(models.Order, {
-        foreignKey: "id",
-        as: "orders",
-      });
-
-      // A User has one Cart
-      User.hasOne(models.Cart, {
-        foreignKey: "id",
-        as: "cart",
-      });
-
-      // A User has one Wishlist
-      User.hasOne(models.Wishlist, {
-        foreignKey: "id",
-        as: "wishlist",
-      });
-
-      // A User can have many Feedback submissions
-      User.hasMany(models.Feedback, {
-        foreignKey: "id",
-        as: "feedback",
-      });
-    }
+class User extends Model {
+  static associate(models) {
+    this.hasMany(models.Address, { foreignKey: 'user_id', as: 'addresses' });
+    this.hasMany(models.Order, { foreignKey: 'user_id', as: 'orders' });
+    this.hasOne(models.Cart, { foreignKey: 'user_id', as: 'cart' });
+    this.hasOne(models.Wishlist, { foreignKey: 'user_id', as: 'wishlist' });
+    this.hasMany(models.Feedback, { foreignKey: 'user_id', as: 'feedback' });
+    this.hasMany(models.Rating, { foreignKey: 'user_id', as: 'ratings' });
   }
+}
 
-  User.init(
-    {
-      id: {
-        type: DataTypes.STRING,
-        primaryKey: true,
-        allowNull: false,
-      },
-      firstName: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        field: "first_name",
-      },
-      lastName: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        field: "last_name",
-      },
-      email: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-        validate: {
-          isEmail: true, // Adds a validation check for email format
-        },
-      },
-      mobile: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        unique: true,
-      },
-      profileImage: {
-        type: DataTypes.STRING,
-        allowNull: true,
-        field: "profile_image",
-      },
-      emailVerified: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-        defaultValue: false,
-        field: "email_verified",
-      },
-      dob: {
-        type: DataTypes.DATEONLY,
-        allowNull: true,
-        field: "dob",
-      },
-      gender: {
-        type: DataTypes.ENUM("Male", "Female", "Other"),
-        allowNull: true,
-        field: "gender",
-      },
-    },
-    {
-      sequelize,
-      modelName: "User",
-      tableName: "users",
-      // Automatically manage createdAt and updatedAt fields
-      timestamps: true,
-      // Use snake_case for automatically added attributes (createdAt, updatedAt)
-      underscored: true,
-      createdAt: "created_at",
-      updatedAt: "updated_at",
-    }
-  );
+User.init({
+  id: { type: DataTypes.STRING, primaryKey: true, allowNull: false },
+  firstName: { type: DataTypes.STRING, allowNull: false, field: 'first_name' },
+  lastName: { type: DataTypes.STRING, allowNull: false, field: 'last_name' },
+  email: { type: DataTypes.STRING, allowNull: false, unique: true, validate: { isEmail: true } },
+  mobile: { type: DataTypes.STRING, allowNull: true, unique: true },
+  profileImage: { type: DataTypes.STRING, allowNull: true, field: 'profile_image' },
+  emailVerified: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false, field: 'email_verified' },
+  dob: { type: DataTypes.DATEONLY, allowNull: true },
+  gender: { type: DataTypes.ENUM('Male', 'Female', 'Other'), allowNull: true },
+}, {
+  sequelize,
+  modelName: 'User',
+  tableName: 'users',
+  timestamps: true,
+  underscored: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+});
 
-  return User;
-};
+module.exports = User;

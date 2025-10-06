@@ -1,43 +1,24 @@
 'use strict';
-const { Model } = require('sequelize');
+const { Model, DataTypes } = require('sequelize');
+const sequelize = require('@/app/config/config.js').connectToPostgresDb();
 
-module.exports = (sequelize, DataTypes) => {
-  class Category extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
-    static associate(models) {
-      // A Category has many SubCategories
-      Category.hasMany(models.SubCategory, {
-        foreignKey: 'category_id',
-        as: 'subCategories'
-      });
-    }
+class Category extends Model {
+  static associate(models) {
+    this.hasMany(models.SubCategory, { foreignKey: 'category_id', as: 'subCategories' });
   }
+}
 
-  Category.init({
-    id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
-      allowNull: false
-    },
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true
-    }
-  }, {
-    sequelize,
-    modelName: 'Category',
-    tableName: 'categories',
-    timestamps: true,
-    underscored: true,
-    createdAt: 'created_at',
-    updatedAt: 'updated_at'
-  });
+Category.init({
+  id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true, allowNull: false },
+  name: { type: DataTypes.STRING, allowNull: false, unique: true },
+}, {
+  sequelize,
+  modelName: 'Category',
+  tableName: 'categories',
+  timestamps: true,
+  underscored: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at',
+});
 
-  return Category;
-};
+module.exports = Category;
