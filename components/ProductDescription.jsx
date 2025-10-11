@@ -27,13 +27,22 @@ const ProductDescription = ({ product }) => {
         });
     }
 
+    const tabs = ['Description', 'Specifications'];
+    if (product?.ratings) {
+        tabs.push(`Reviews (${product.ratings.length})`);
+    } else {
+        tabs.push('Reviews (0)');
+    }
+    tabs.push('Seller Info');
+
+
     return (
         <>
             <div className="my-12 text-sm text-slate-600">
 
                 {/* Tabs */}
                 <div className="flex border-b border-slate-200 mb-8 max-w-2xl">
-                    {['Description', `Reviews (${product?.ratings?.length || 0})`, 'Seller Info'].map((tab, index) => (
+                    {tabs.map((tab, index) => (
                         <button className={`${tab.startsWith(selectedTab) ? 'border-b-2 border-indigo-600 font-semibold text-indigo-600' : 'text-slate-400'} px-4 py-2 font-medium transition-colors`} key={index} onClick={() => setSelectedTab(tab.split(' ')[0])}>
                             {tab}
                         </button>
@@ -46,6 +55,27 @@ const ProductDescription = ({ product }) => {
                         <p>{product.description}</p>
                     </div>
                 )}
+
+                {/* Specifications */}
+                {selectedTab === "Specifications" && (
+                    <div className="prose prose-slate max-w-xl">
+                        <ul className="list-none p-0">
+                            {product.specs && product.specs.length > 0 ? (
+                                product.specs
+                                    .filter(spec => spec.key !== 'product_card_highlight') // Filter out the card highlight
+                                    .map((spec, index) => (
+                                        <li key={index} className="flex border-b border-slate-100 py-2">
+                                            <strong className="w-1/3 text-slate-600">{spec.key}:</strong> 
+                                            <span className="w-2/3 text-slate-800">{spec.value}</span>
+                                        </li>
+                                    ))
+                            ) : (
+                                <p>No specifications available for this product.</p>
+                            )}
+                        </ul>
+                    </div>
+                )}
+
                 {/* Reviews */}
                 {selectedTab === "Reviews" && (
                     <div className="flex flex-col gap-8 mt-8 max-w-2xl">
