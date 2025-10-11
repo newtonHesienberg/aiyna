@@ -46,16 +46,17 @@ const ThemedSections = () => {
 
   return (
     <div className="px-6 lg:px-12 my-20">
-        {/* Tabs */}
-        <div className="flex justify-center gap-4 sm:gap-8 border-b border-slate-200 mb-8">
+        {/* ISSUE 3 FIX: Enhanced scrolling tab design. Removed border-b from wrapper 
+            and added padding/background to buttons for a less cluttered look. */}
+        <div className="flex justify-start gap-3 sm:gap-4 overflow-x-auto no-scrollbar whitespace-nowrap mb-12 py-1">
           {sections.map((section) => (
             <button
               key={section.name}
               onClick={() => setActiveTab(section.name)}
-              className={`pb-3 text-lg font-medium transition-colors ${
-                activeTab === section.name
-                  ? "text-indigo-600 border-b-2 border-indigo-600"
-                  : "text-slate-500 hover:text-indigo-500"
+              className={`pb-3 text-sm font-medium transition-colors border-2 px-5 py-2 rounded-full whitespace-nowrap active:scale-95 transition-all
+                ${activeTab === section.name
+                  ? "text-white bg-slate-800 border-slate-800 shadow-md"
+                  : "text-slate-600 bg-white border-slate-200 hover:bg-slate-50"
               }`}
             >
               {section.name}

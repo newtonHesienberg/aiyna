@@ -13,9 +13,13 @@ const CategoriesMarquee = () => {
     })));
 
     return (
-        <div className="overflow-hidden w-full relative max-w-7xl mx-auto select-none group sm:my-20">
-            <div className="absolute left-0 top-0 h-full w-20 z-10 pointer-events-none bg-gradient-to-r from-white to-transparent" />
-            <div className="flex min-w-[200%] animate-[marqueeScroll_10s_linear_infinite] sm:animate-[marqueeScroll_40s_linear_infinite] group-hover:[animation-play-state:paused] gap-4" >
+        <div className="overflow-hidden w-full relative select-none group mt-3 sm:my-10 mb-6">
+            {/* Added horizontal padding to the scroll container to give it space, 
+                and increased blur size for a smoother fade effect. */}
+            <div className="absolute left-0 top-0 h-full w-10 sm:w-20 z-10 pointer-events-none bg-gradient-to-r from-white to-transparent" />
+            
+            {/* The flex container for the scrolling items */}
+            <div className="flex min-w-[200%] animate-[marqueeScroll_10s_linear_infinite] sm:animate-[marqueeScroll_40s_linear_infinite] group-hover:[animation-play-state:paused] gap-4 px-6 sm:px-12" >
                 {/* We duplicate the array to ensure the marquee has enough items to scroll smoothly */}
                 {[...allSubCategories, ...allSubCategories, ...allSubCategories, ...allSubCategories].map((subCategory, index) => (
                     <Link 
