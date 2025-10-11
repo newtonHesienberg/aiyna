@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useSelector } from "react-redux";
 import ShopSidebar from "@/components/ShopSidebar";
 import Loading from "@/components/Loading";
+import CategoriesMarquee from "@/components/CategoriesMarquee"; // Import CategoriesMarquee
 
 function ShopPage() {
   const router = useRouter();
@@ -97,6 +98,9 @@ function ShopPage() {
 
   return (
     <div className="min-h-[70vh] mx-6">
+        {/* 4. In /shop page, please add categoriesMarquee on top */}
+        <CategoriesMarquee /> 
+
         <div className="max-w-7xl mx-auto my-10 flex flex-col md:flex-row gap-8">
             {/* Mobile Filter Drawer */}
             <div className={`fixed inset-0 z-50 bg-black/20 backdrop-blur-sm md:hidden ${isFilterOpen ? 'block' : 'hidden'}`} onClick={() => setIsFilterOpen(false)}></div>

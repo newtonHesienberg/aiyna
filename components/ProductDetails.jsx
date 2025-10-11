@@ -1,4 +1,4 @@
-"use client";
+'use client'
 import { addToCartAPI } from "../lib/features/cart/cartSlice";
 import {
   StarIcon,
@@ -6,6 +6,8 @@ import {
   EarthIcon,
   CreditCardIcon,
   UserIcon,
+  Heart,
+  XIcon, // New: Import XIcon for modal close button
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
@@ -14,12 +16,16 @@ import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import { useAuth } from "@/app/context/AuthContext";
 import RatingModal from "./RatingModal";
+import { toggleWishlistAPI } from '@/lib/features/wishlist/wishlistSlice'
 
 const ProductDetails = ({ product }) => {
   const { currentUser } = useAuth();
   const productId = product.id;
   const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || "₹";
   const { cartItems } = useSelector((state) => state.cart);
+  const { items: wishlistItems } = useSelector(state => state.wishlist);
+  const isWishlisted = wishlistItems.includes(product.id);
+  
   const dispatch = useDispatch();
   const router = useRouter();
 
@@ -27,30 +33,14 @@ const ProductDetails = ({ product }) => {
   const [selectedColor, setSelectedColor] = useState(product.variants?.[0]?.color);
   const [selectedSize, setSelectedSize] = useState(product.variants?.[0]?.size);
   const [ratingModal, setRatingModal] = useState(null);
-
-  const [showMagnifier, setShowMagnifier] = useState(false);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 }); 
-  const imageContainerRef = useRef(null);
-  const magnifierSize = 100;
-  const zoomLevel = 1.5;
-
-  useEffect(() => {
-    if (imageContainerRef.current) {
-      const { width, height } =
-        imageContainerRef.current.getBoundingClientRect();
-      setDimensions({ width, height });
-    }
-  }, [mainImage]);
-
-  const handleMouseMove = (e) => {
-    if (!imageContainerRef.current) return;
-    const { left, top } = imageContainerRef.current.getBoundingClientRect();
-    const x = e.clientX - left;
-    const y = e.clientY - top;
-    setPosition({ x, y });
-  };
   
+  // New State for Zoom Modal
+  const [isZoomOpen, setIsZoomOpen] = useState(false);
+  const [zoomImage, setZoomImage] = useState(null);
+
+  // Removed magnifier related states and effects (showMagnifier, position, dimensions, imageContainerRef, useEffect, handleMouseMove)
+  // ... (Removed unused magnifier logic)
+
   const itemInCart = Object.values(cartItems).find(
     (item) =>
       item.productId === productId &&
@@ -75,10 +65,34 @@ const ProductDetails = ({ product }) => {
     });
   };
 
+  const handleWishlistToggle = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!currentUser) {
+        sessionStorage.setItem('pendingAction', JSON.stringify({
+            type: 'TOGGLE_WISHLIST',
+            payload: product.id
+        }));
+        router.push(`/login?nextUrl=/product/${productId}`);
+        return;
+    }
+    dispatch(toggleWishlistAPI(product.id));
+  };
+  
   const removeFromCartHandler = () => {
-     // You would need a 'removeFromCartAPI' thunk for this to work with the API
      console.log("Remove from cart action should be handled by an API thunk.");
   };
+
+  const handleZoom = (imageSrc) => {
+    setZoomImage(imageSrc);
+    setIsZoomOpen(true);
+  };
+
+  const closeZoom = () => {
+    setIsZoomOpen(false);
+    setZoomImage(null);
+  };
+
 
   const averageRating =
     product?.ratings?.length > 0
@@ -112,11 +126,8 @@ const ProductDetails = ({ product }) => {
         </div>
         {/* Main Image Container */}
         <div
-          ref={imageContainerRef}
-          onMouseEnter={() => setShowMagnifier(true)}
-          onMouseLeave={() => setShowMagnifier(false)}
-          onMouseMove={handleMouseMove}
-          className="relative flex justify-center items-center h-100 sm:size-113 bg-slate-100 rounded-lg overflow-hidden"
+          onClick={() => handleZoom(mainImage)} // Trigger zoom on click
+          className="relative flex justify-center items-center h-100 sm:size-113 bg-slate-100 rounded-lg overflow-hidden cursor-zoom-in"
         >
           <Image
             src={mainImage}
@@ -124,31 +135,17 @@ const ProductDetails = ({ product }) => {
             width={250}
             height={250}
             style={{ width: "auto", height: "auto" }}
+            className="transition-transform duration-300 hover:scale-105"
           />
-
-          <div
-            style={{
-              display: showMagnifier ? "block" : "none",
-              position: "absolute",
-              left: `${position.x - magnifierSize / 2}px`,
-              top: `${position.y - magnifierSize / 2}px`,
-              width: `${magnifierSize}px`,
-              height: `${magnifierSize}px`,
-              pointerEvents: "none",
-              border: "2px solid #cbd5e1",
-              borderRadius: "50%",
-              backgroundImage: `url(${mainImage})`,
-              backgroundRepeat: "no-repeat",
-              backgroundSize: `${dimensions.width * zoomLevel}px ${
-                dimensions.height * zoomLevel
-              }px`,
-              backgroundPosition: `-${
-                position.x * zoomLevel - magnifierSize / 2
-              }px -${position.y * zoomLevel - magnifierSize / 2}px`,
-              backgroundColor: "#fff",
-            }}
-          />
+          {/* Wishlist Icon on Main Image */}
+          <button
+            onClick={handleWishlistToggle}
+            className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md hover:scale-110 transition-transform"
+          >
+            <Heart size={20} className={`transition-colors ${isWishlisted ? 'text-red-500 fill-red-500' : 'text-slate-500'}`} />
+          </button>
         </div>
+        {/* Removed Magnifier Div */}
       </div>
 
       {/* Product Info */}
@@ -300,6 +297,36 @@ const ProductDetails = ({ product }) => {
           </p>
         </div>
       </div>
+
+      {/* Full-Screen Zoom Modal */}
+      {isZoomOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm transition-opacity"
+          onClick={closeZoom} // Close on backdrop click
+        >
+          <div className="relative w-full h-full flex items-center justify-center p-4 sm:p-12" onClick={e => e.stopPropagation()}>
+            {/* Close Button */}
+            <button 
+              onClick={closeZoom} 
+              className="absolute top-4 right-4 z-50 text-white hover:text-gray-300 p-2 transition-all rounded-full bg-black/50 hover:bg-black/70"
+            >
+              <XIcon size={32} />
+            </button>
+            
+            {/* Zoomed Image Container */}
+            <div className="max-w-full max-h-full transition-transform duration-500 ease-in-out transform">
+              <Image
+                src={zoomImage}
+                alt="Zoomed Product Image"
+                width={1000} // Set large width for high resolution
+                height={1000} // Set large height for high resolution
+                style={{ width: 'auto', height: 'auto', maxHeight: '90vh', maxWidth: '90vw', objectFit: 'contain' }}
+                className="rounded-lg shadow-2xl transition-transform duration-500"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
