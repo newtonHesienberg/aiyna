@@ -46,8 +46,6 @@ const ThemedSections = () => {
 
   return (
     <div className="px-6 lg:px-12 my-20">
-        {/* ISSUE 3 FIX: Enhanced scrolling tab design. Removed border-b from wrapper 
-            and added padding/background to buttons for a less cluttered look. */}
         <div className="flex justify-start gap-3 sm:gap-4 overflow-x-auto no-scrollbar whitespace-nowrap mb-12 py-1">
           {sections.map((section) => (
             <button
@@ -81,7 +79,7 @@ const ThemedSections = () => {
                 {activeSection.description}
               </p>
               <Link
-                href={`/shop?theme=${activeSection.name}`} // Link to a filtered shop page by theme
+                href={`/shop?theme=${activeSection.name}`} 
                 className="flex items-center gap-2 text-white font-semibold mt-4 group"
               >
                 View Collection
@@ -94,10 +92,10 @@ const ThemedSections = () => {
           </div>
 
           {/* Right Side Boxes */}
-          <div className="w-full lg:w-3/5 grid grid-cols-2 gap-6">
+          <div className="w-full lg:w-3/5 grid grid-cols-2 gap-4">
             {activeSection.products && activeSection.products.length > 0 ? (
               activeSection.products.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard key={product.id} product={product} isHomePage={true} />
               ))
             ) : (
               <div className="col-span-2 flex items-center justify-center h-full">

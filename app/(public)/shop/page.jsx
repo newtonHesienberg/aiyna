@@ -86,7 +86,7 @@ function ShopPage() {
     } else if (sort === "price-asc") {
       tempProducts.sort((a, b) => a.price - b.price);
     } else if (sort === "price-desc") {
-      tempProducts.sort((a, b) => b.price - a.price);
+      tempProducts.sort((a, b) => b.price - b.price);
     }
 
     setFilteredProducts(tempProducts);
@@ -132,7 +132,7 @@ function ShopPage() {
                     </button>
                 </div>
                 {filteredProducts.length > 0 ? (
-                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 xl:gap-8 mx-auto mb-32">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mx-auto mb-32">
                         {filteredProducts.map((product) => (
                             <ProductCard key={product.id} product={product} />
                         ))}
