@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.8.2",
+    "@tailwindcss/postcss": "^4",
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.2",
     "firebase": "^12.3.0",
@@ -27,7 +28,6 @@
     "sequelize": "^6.37.7"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
     "tailwindcss": "^4"
   }
 }
